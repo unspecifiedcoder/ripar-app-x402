@@ -34,13 +34,42 @@ export function placeAgents(count: number, clusters: number, r: Rng): Placed[] {
 
   relax(pts, 0.052, 46);
 
-  // Pull the whole field back inside the viewport after relaxation pushed at it.
-  let max = 0;
-  for (const p of pts) max = Math.max(max, Math.abs(p.x), Math.abs(p.y) / 0.68);
-  const k = max > 1 ? 0.98 / max : 1;
+  // Fit the field to the viewport after relaxation has pushed at its edges.
+  //
+  // Per axis, and that matters. This used to take a single maximum across both
+  // axes and scale x and y by it together, which meant the wider axis decided
+  // the fate of the narrower one: x would overflow to about 1.7, everything got
+  // multiplied by 0.58, and y — which only ever reached 0.8 — came out at 0.46.
+  // On screen that was a field filling the width and using less than half the
+  // height, with a dead band across the bottom third of a full-bleed hero.
+  //
+  // Fit the actual bounding box rather than assuming the cloud is centred on
+  // the origin. Seven clusters dropped on a ring with gaussian scatter are
+  // never quite symmetric, and an uncentred field reads as a mistake even when
+  // nobody can say why — it just looks like it slid.
+  let x0 = Infinity;
+  let x1 = -Infinity;
+  let y0 = Infinity;
+  let y1 = -Infinity;
   for (const p of pts) {
-    p.x *= k;
-    p.y *= k;
+    if (p.x < x0) x0 = p.x;
+    if (p.x > x1) x1 = p.x;
+    if (p.y < y0) y0 = p.y;
+    if (p.y > y1) y1 = p.y;
+  }
+  const midX = (x0 + x1) / 2;
+  const midY = (y0 + y1) / 2;
+  const halfX = (x1 - x0) / 2;
+  const halfY = (y1 - y0) / 2;
+
+  // Nearly the whole frame. Scaling by the extent guarantees every agent lands
+  // inside it, so there is no reason to hold much back — and the panels are
+  // glass, so agents passing behind them read as depth rather than as clipping.
+  const kx = halfX > 0 ? 0.99 / halfX : 1;
+  const ky = halfY > 0 ? 0.96 / halfY : 1;
+  for (const p of pts) {
+    p.x = (p.x - midX) * kx;
+    p.y = (p.y - midY) * ky;
   }
   return pts;
 }

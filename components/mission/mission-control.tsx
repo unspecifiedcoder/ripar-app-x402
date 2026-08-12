@@ -34,37 +34,63 @@ function Field() {
   const [ceremony, setCeremony] = useState<Ceremony | null>(null);
   const onCeremony = useCallback((c: Ceremony | null) => setCeremony(c), []);
 
+  // The instruments recede with everything else.
+  //
+  // Without this the field dims for a ceremony and the panels do not, which
+  // leaves a bright revenue figure as the loudest thing on a screen that is
+  // supposed to be about one agent. It also matters practically: the field is
+  // full-bleed, so a ceremony can fire for an agent sitting behind a panel, and
+  // fading the glass is what lets it be seen at all.
+  //
+  // Graduation only half-recedes, for the same reason it barely dims the field:
+  // it is public recognition, not a private moment, and the economy is supposed
+  // to visibly carry on around it.
+  const recede = ceremony ? (ceremony.kind === "graduation" ? 0.55 : 0.16) : 1;
+
   return (
     <div className="relative h-[100dvh] w-full overflow-hidden bg-ink text-frost">
       <StreamCanvas onCeremony={onCeremony} />
-      <CeremonyOverlay ceremony={ceremony} />
-      <TopRail />
 
-      <div className="pointer-events-none absolute inset-0 flex flex-col gap-3 p-3 pt-[52px] sm:gap-4 sm:p-5 sm:pt-[60px]">
-        <Panel delay={1.05} className="pointer-events-auto lg:hidden">
-          <MissionSummary />
-        </Panel>
+      <div
+        className="pointer-events-none absolute inset-0 transition-opacity ease-out"
+        style={{
+          opacity: recede,
+          // Out with the field, back a beat after it. The world returns first
+          // and the instruments follow, which is the right order to notice them.
+          transitionDuration: ceremony ? "520ms" : "760ms",
+        }}
+      >
+        <TopRail />
 
-        <div className="flex min-h-0 flex-1 gap-4">
-          <Panel delay={1.05} className="pointer-events-auto hidden w-[268px] shrink-0 self-start lg:block">
+        <div className="pointer-events-none absolute inset-0 flex flex-col gap-3 p-3 pt-[52px] sm:gap-4 sm:p-5 sm:pt-[60px]">
+          <Panel delay={1.05} className="pointer-events-auto lg:hidden">
             <MissionSummary />
           </Panel>
 
-          <div className="min-w-0 flex-1" />
+          <div className="flex min-h-0 flex-1 gap-4">
+            <Panel delay={1.05} className="pointer-events-auto hidden w-[268px] shrink-0 self-start lg:block">
+              <MissionSummary />
+            </Panel>
 
-          <Panel delay={1.18} className="pointer-events-auto hidden w-[318px] shrink-0 lg:block">
+            <div className="min-w-0 flex-1" />
+
+            <Panel delay={1.18} className="pointer-events-auto hidden w-[318px] shrink-0 lg:block">
+              <SettlementFeed />
+            </Panel>
+          </div>
+
+          <Panel delay={1.18} className="pointer-events-auto h-[34dvh] shrink-0 lg:hidden">
             <SettlementFeed />
           </Panel>
+
+          <Panel delay={1.3} className="pointer-events-auto hidden shrink-0 sm:block">
+            <Timeline />
+          </Panel>
         </div>
-
-        <Panel delay={1.18} className="pointer-events-auto h-[34dvh] shrink-0 lg:hidden">
-          <SettlementFeed />
-        </Panel>
-
-        <Panel delay={1.3} className="pointer-events-auto hidden shrink-0 sm:block">
-          <Timeline />
-        </Panel>
       </div>
+
+      {/* Above the receding glass, never inside it. */}
+      <CeremonyOverlay ceremony={ceremony} />
     </div>
   );
 }

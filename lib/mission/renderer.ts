@@ -343,6 +343,12 @@ export class StreamRenderer {
         litAt: -1,
         particle: p,
       };
+      // A departure ring at the far end, so the reach has a beginning as well
+      // as an arrival. Only First Stranger gets one: it is the only moment
+      // whose subject is the pair rather than the agent.
+      if (kind === "first-stranger") {
+        this.ring(this.ox[s.from], this.oy[s.from], 70, 1500, RGB.frost, true);
+      }
       this.emit("rising");
     }
 
@@ -748,9 +754,16 @@ export class StreamRenderer {
       const x = this.ox[i];
       const y = this.oy[i];
 
-      const rad = this.radiusOf(i, time) * (hot ? 1.32 : 1);
+      // The far end of a First Stranger. Without this the arc appears to come
+      // from nowhere, and the caption names an agent you cannot find — the
+      // moment is that somebody reached across, so you have to see who.
+      const c = this.ceremony;
+      const reaching = c !== null && c.kind === "first-stranger" && i === c.from;
+
+      const rad = this.radiusOf(i, time) * (hot ? 1.32 : reaching ? 1.25 : 1);
       // Unlit agents are present but cold: deployed, waiting, never yet paid.
-      const brightness = (lit ? 0.24 + e * 0.7 : 0.075) * reveal * this.depth[i] * (hot ? 1.6 : 1);
+      const brightness =
+        (lit ? 0.24 + e * 0.7 : 0.075) * reveal * this.depth[i] * (hot ? 1.6 : reaching ? 2.4 : 1);
 
       // A wide halo on a resting node is almost entirely transparent pixels, and
       // there are two hundred of them. Only nodes that are actually doing

@@ -31,7 +31,13 @@ export function CeremonyOverlay({ ceremony }: { ceremony: Ceremony | null }) {
         <motion.div
           key={`${visible.kind}:${visible.handle}`}
           className="pointer-events-none absolute z-40 -translate-x-1/2"
-          style={{ left: visible.x, top: visible.y + 34 }}
+          // Follows its agent, but never off the edge. The field is full-bleed,
+          // so a ceremony can fire for an agent sitting in a corner, and a
+          // caption for a moment you cannot read is worse than no caption.
+          style={{
+            left: `clamp(190px, ${visible.x}px, calc(100vw - 190px))`,
+            top: `clamp(88px, ${visible.y + 34}px, calc(100dvh - 168px))`,
+          }}
           initial={{ opacity: 0, y: 10 }}
           animate={{ opacity: 1, y: 0 }}
           exit={{ opacity: 0, y: -6 }}
