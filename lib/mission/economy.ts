@@ -14,10 +14,20 @@
 import { handles, SERVICES } from "./names";
 import { placeAgents } from "./layout";
 import { between, exponential, gaussian, pick, rng, type Rng } from "./rng";
-import type { Agent, EconomySnapshot, Settlement, SettlementState } from "./types";
+import {
+  newTrace,
+  record,
+  type Agent,
+  type CeremonyKind,
+  type EconomySnapshot,
+  type Settlement,
+  type SettlementState,
+} from "./types";
 
 const SEED = 0x5eed_1a20;
-const CLUSTERS = 7;
+
+/** Communities in the field. Also the number of patrons Graduation requires. */
+export const CLUSTERS = 7;
 
 /** Rolling window drawn by the timeline. */
 const BUCKETS = 72;
@@ -34,11 +44,65 @@ const WARM_STEP = 250;
 /** Agents left dark at the end of warm-up, held back for First Light. */
 const UNLIT_RESERVE = 46;
 
+/**
+ * How often a live payment comes from outside the receiver's cluster.
+ *
+ * Deliberately small. Agents mostly trade with their neighbours, which is what
+ * makes the field read as seven communities rather than one hairball — and what
+ * makes a payment arriving from across the map mean something.
+ *
+ * During warm-up this is zero: every agent enters the live field having only
+ * ever been paid by its own neighbours, so every First Stranger is still ahead
+ * of it and none of them were spent where nobody was watching.
+ */
+const STRANGER_ODDS = 0.055;
+
+/**
+ * Agents that trade only with their own neighbours for the whole of warm-up, so
+ * they enter the live field having never met an outsider.
+ *
+ * This is the First Stranger equivalent of UNLIT_RESERVE, and it exists for the
+ * same reason: the rest of the roster needs to build real payer diversity during
+ * warm-up — otherwise nobody is anywhere near Graduation when the screen opens —
+ * but if *everyone* did, every first stranger would have been spent in the dark.
+ */
+const STRANGER_RESERVE = 40;
+
+/**
+ * Silence that counts as a night, and the history you need to have earned one.
+ *
+ * Eight minutes, which is not arbitrary: measured against this roster it leaves
+ * about five agents in the dark at the end of warm-up and the long tail
+ * regenerates them at roughly the rate the scheduler spends them. Raising it to
+ * twenty minutes looks more dramatic and runs the pool dry inside ten.
+ */
+const NIGHT_MS = 8 * 60_000;
+const NIGHT_MIN_CALLS = 24;
+
+/** Ceremonies the economy stages, in rotation. */
+const SCHEDULED: CeremonyKind[] = ["first-light", "first-stranger", "long-night", "graduation"];
+
+/** Gap between staged ceremonies, and the quiet either side of any of them. */
+const CEREMONY_MIN_MS = 24_000;
+const CEREMONY_MAX_MS = 48_000;
+const CEREMONY_LOCKOUT_MS = 9_000;
+/** How soon to try again when a staged ceremony was refunded, or nobody was eligible. */
+const CEREMONY_RETRY_MS = 6_000;
+const CEREMONY_IDLE_MS = 12_000;
+
+/** Sentinel clusters for a staged payment's origin. */
+const ANY = -1;
+const ANY_STRANGER = -2;
+
 export type EconomyOptions = { agents?: number; seed?: number };
 
 export class Economy {
   readonly agents: Agent[];
   private readonly r: Rng;
+  /** Agent ids by cluster, so picking a neighbour is one draw rather than a scan. */
+  private readonly members: number[][];
+  /** Agents kept from meeting an outsider until someone is watching. */
+  private readonly sheltered = new Set<number>();
 
   private t = 0;
   private seq = 0;
@@ -47,12 +111,20 @@ export class Economy {
   private burstUntil = -1;
   private burstTarget = -1;
   private lullUntil = -1;
-  private firstLightDue = 0;
+
+  /** The ceremony `receiver()` staged, read and cleared by `settle()`. */
+  private pending: CeremonyKind | null = null;
+  /** Cluster the staged payment must come from: -1 any, -2 any but home. */
+  private pendingFrom = ANY;
+  private ceremonyDue = 0;
+  private ceremonyLock = 0;
+  private lastKind: CeremonyKind | null = null;
 
   private revenue = 0;
   private txns = 0;
   private refunds = 0;
   private lit = 0;
+  private graduated = 0;
 
   private readonly buckets = new Array<number>(BUCKETS).fill(0);
   private bucketAcc = 0;
@@ -92,11 +164,24 @@ export class Economy {
         refunds: 0,
         lastAt: -Infinity,
         firstLightAt: null,
+        firstStrangerAt: null,
+        graduatedAt: null,
+        longestNightMs: 0,
+        patrons: new Set<number>(),
+        trace: newTrace(),
       } satisfies Agent;
     });
 
+    this.members = Array.from({ length: CLUSTERS }, () => [] as number[]);
+    for (const a of this.agents) this.members[a.cluster]?.push(a.id);
+
+    // Drawn before warm-up so the shelter is part of the deterministic seed.
+    while (this.sheltered.size < Math.min(STRANGER_RESERVE, agents)) {
+      this.sheltered.add(Math.floor(this.r() * agents));
+    }
+
     this.warm();
-    this.firstLightDue = this.t + between(this.r, 4_000, 11_000);
+    this.ceremonyDue = this.t + between(this.r, 4_000, 11_000);
     this.snap = this.build();
   }
 
@@ -164,11 +249,17 @@ export class Economy {
   private settle(): Settlement | null {
     const to = this.receiver();
     if (to < 0) return null;
-    let from = Math.floor(this.r() * this.agents.length);
-    if (from === to) from = (from + 1) % this.agents.length;
+
+    // Read and clear in one place: a staged ceremony is consumed by exactly the
+    // payment it was staged for, whether or not it ends up earning one.
+    const staged = this.pending;
+    const stagedFrom = this.pendingFrom;
+    this.pending = null;
+    this.pendingFrom = ANY;
 
     const a = this.agents[to];
-    const firstLight = a.firstLightAt === null;
+    const from = this.payer(to, stagedFrom);
+    const stranger = this.agents[from].cluster !== a.cluster;
 
     // A handler that fails is refunded, never charged — the whole point of
     // atomic settlement. It still costs the network a round trip, so it counts
@@ -181,10 +272,19 @@ export class Economy {
     const metered = this.r() < 0.08;
     const amount = failed ? 0 : a.price * (metered ? between(this.r, 0.3, 1) : 1);
 
+    // `lastAt` is the last time it *earned*, so a failed call does not end a
+    // night. Nobody paid, and the silence the agent is sitting in is unbroken.
+    const quietMs = a.lastAt === -Infinity ? 0 : this.t - a.lastAt;
+
     a.calls++;
     a.weight += 0.35;
-    a.lastAt = this.t;
     this.txns++;
+    record(a.trace, quietMs, stranger, failed);
+
+    // A refunded ceremony is not a ceremony: nothing was paid, so nothing
+    // happened. The staged moment is spent, and the scheduler tries again soon.
+    let kind: CeremonyKind | null = failed ? null : staged;
+    if (failed && staged) this.ceremonyDue = this.t + CEREMONY_RETRY_MS;
 
     if (failed) {
       a.refunds++;
@@ -192,12 +292,31 @@ export class Economy {
     } else {
       a.earned += amount;
       this.revenue += amount;
-      if (firstLight) {
+      a.lastAt = this.t;
+      a.patrons.add(this.agents[from].cluster);
+      if (quietMs > a.longestNightMs) a.longestNightMs = quietMs;
+
+      // The facts below are recorded every time they become true. Whether one
+      // of them gets a *ceremony* is a separate question, answered above by the
+      // scheduler — otherwise a screen with two hundred agents on it would stop
+      // for something every few seconds and none of it would land.
+      if (a.firstLightAt === null) {
         a.firstLightAt = this.t;
         this.lit++;
       }
+      if (stranger && a.firstStrangerAt === null) a.firstStrangerAt = this.t;
+      if (a.graduatedAt === null && a.patrons.size >= CLUSTERS) {
+        a.graduatedAt = this.t;
+        this.graduated++;
+      }
     }
 
+    // Last gate: a staged ceremony only counts if the fact it names actually
+    // became true on this payment. The economy stages the timing and never the
+    // truth, so if the two disagree the truth wins and the moment is dropped.
+    if (kind && !happened(a, kind, this.t, quietMs)) kind = null;
+
+    if (kind) this.ceremonyLock = this.t + CEREMONY_LOCKOUT_MS;
     this.bucketAcc++;
 
     const s: Settlement = {
@@ -207,8 +326,9 @@ export class Economy {
       amount,
       at: this.t,
       state,
-      // A refunded first call is not a First Light — nothing was ever paid.
-      firstLight: firstLight && !failed,
+      ceremony: kind,
+      stranger,
+      quietMs,
     };
     this.feed.unshift(s);
     if (this.feed.length > FEED) this.feed.length = FEED;
@@ -216,9 +336,57 @@ export class Economy {
   }
 
   /**
+   * Who pays. Agents mostly buy from their own neighbourhood; occasionally
+   * someone from the other side of the field finds them.
+   *
+   * `want` is the cluster a staged ceremony needs the payment to come from —
+   * ANY to leave it to chance, ANY_STRANGER for anywhere but home.
+   */
+  private payer(to: number, want: number): number {
+    const home = this.agents[to].cluster;
+
+    if (want >= 0) return this.fromCluster(want, to);
+    if (want === ANY_STRANGER) return this.fromAnywhereBut(home, to);
+
+    // Sheltered agents hear only from their neighbours until the field is live.
+    const shelter = this.warming && this.sheltered.has(to);
+    if (shelter || this.r() > STRANGER_ODDS) {
+      const m = this.members[home];
+      if (m.length > 1) {
+        let k = Math.floor(this.r() * m.length);
+        if (m[k] === to) k = (k + 1) % m.length;
+        return m[k];
+      }
+    }
+    return this.fromAnywhereBut(home, to);
+  }
+
+  private fromCluster(cluster: number, not: number): number {
+    const m = this.members[cluster];
+    if (!m || m.length === 0) return this.fromAnywhereBut(this.agents[not].cluster, not);
+    let k = Math.floor(this.r() * m.length);
+    if (m[k] === not) k = (k + 1) % m.length;
+    return m[k];
+  }
+
+  /** Bounded, so a degenerate roster with a single cluster cannot spin here. */
+  private fromAnywhereBut(home: number, not: number): number {
+    let p = Math.floor(this.r() * this.agents.length);
+    for (let guard = 0; guard < 16 && this.agents[p].cluster === home; guard++) {
+      p = Math.floor(this.r() * this.agents.length);
+    }
+    if (p === not) p = (p + 1) % this.agents.length;
+    return p;
+  }
+
+  /**
    * Who gets paid. Tournament selection on weight gives the power-law shape a
    * real marketplace has — a few hubs, a long tail — without rebuilding a
    * cumulative table on every draw.
+   *
+   * Once a ceremony is due this also acts as the stage manager: it finds someone
+   * the moment is genuinely true for and sends the next payment there. It never
+   * invents the fact, only the timing.
    */
   private receiver(): number {
     if (this.warming) {
@@ -228,16 +396,86 @@ export class Economy {
       return this.tournament();
     }
 
-    if (this.t >= this.firstLightDue) {
-      const dark = this.pickUnlit();
-      if (dark >= 0) {
-        this.firstLightDue = this.t + between(this.r, 30_000, 72_000);
-        return dark;
+    if (this.t >= this.ceremonyDue && this.t >= this.ceremonyLock) {
+      const pool: { kind: CeremonyKind; who: number }[] = [];
+      for (const kind of SCHEDULED) {
+        const who = this.candidate(kind);
+        if (who >= 0) pool.push({ kind, who });
       }
-      this.firstLightDue = this.t + 20_000;
+
+      if (pool.length > 0) {
+        // Never the same kind twice running while another is available, but
+        // otherwise unordered. A strict rotation would be a metronome, and the
+        // one thing this screen must never become is predictable — a viewer who
+        // can guess what happens next has stopped watching it.
+        const fresh = pool.filter((p) => p.kind !== this.lastKind);
+        const from = fresh.length > 0 ? fresh : pool;
+        const choice = from[Math.floor(this.r() * from.length)];
+
+        this.lastKind = choice.kind;
+        this.pending = choice.kind;
+        this.pendingFrom = this.originFor(choice.kind, choice.who);
+        this.ceremonyDue = this.t + between(this.r, CEREMONY_MIN_MS, CEREMONY_MAX_MS);
+        return choice.who;
+      }
+      this.ceremonyDue = this.t + CEREMONY_IDLE_MS;
     }
+
     if (this.burstTarget >= 0 && this.r() < 0.62) return this.burstTarget;
     return this.pickLit();
+  }
+
+  /** Someone the moment is actually true for, or -1 if nobody qualifies yet. */
+  private candidate(kind: CeremonyKind): number {
+    switch (kind) {
+      case "first-light":
+        return this.pickUnlit();
+
+      case "first-stranger": {
+        // The most established agent that has still only ever been paid by its
+        // own neighbours. The longer that has been true, the more the arrival
+        // of an outsider means.
+        let best = -1;
+        for (const a of this.agents) {
+          if (a.firstLightAt === null || a.firstStrangerAt !== null) continue;
+          if (best < 0 || a.calls > this.agents[best].calls) best = a.id;
+        }
+        return best;
+      }
+
+      case "long-night": {
+        // Whoever has been in the dark longest, provided it had a life before it.
+        let best = -1;
+        for (const a of this.agents) {
+          if (a.firstLightAt === null || a.calls < NIGHT_MIN_CALLS) continue;
+          if (this.t - a.lastAt < NIGHT_MS) continue;
+          if (best < 0 || a.lastAt < this.agents[best].lastAt) best = a.id;
+        }
+        return best;
+      }
+
+      case "graduation": {
+        // One cluster short of the whole network. A single payment from the one
+        // it has never heard from finishes the set — which is why graduation can
+        // be staged at all, and why it cannot be staged early.
+        let best = -1;
+        for (const a of this.agents) {
+          if (a.graduatedAt !== null || a.patrons.size !== CLUSTERS - 1) continue;
+          if (best < 0 || a.calls > this.agents[best].calls) best = a.id;
+        }
+        return best;
+      }
+    }
+  }
+
+  /** Which cluster a staged payment has to come from for its moment to be true. */
+  private originFor(kind: CeremonyKind, who: number): number {
+    if (kind === "first-stranger") return ANY_STRANGER;
+    if (kind === "graduation") {
+      const a = this.agents[who];
+      for (let c = 0; c < CLUSTERS; c++) if (!a.patrons.has(c)) return c;
+    }
+    return ANY;
   }
 
   private tournament(): number {
@@ -294,6 +532,10 @@ export class Economy {
    * of milliseconds at construction and buys the one thing a live visualisation
    * cannot fake: a past. The field opens with real hubs, real history and a
    * full timeline instead of a polite empty state.
+   *
+   * It also opens with agents already deep in a silence they have not yet come
+   * back from, which is where the first Long Night comes from — you cannot wait
+   * twenty-two minutes for one on a screen somebody just opened.
    */
   private warm() {
     this.warming = true;
@@ -340,12 +582,33 @@ export class Economy {
       healthy,
       agents: this.agents.length,
       lit: this.lit,
+      graduated: this.graduated,
       settlementRate: this.txns ? (this.txns - this.refunds) / this.txns : 1,
       perMinute: lastMinute,
       recent: this.feed.slice(0, FEED),
       histogram: this.buckets.slice(),
       elapsedMs: this.t,
     };
+  }
+}
+
+/**
+ * Did the moment this payment was staged for actually just happen?
+ *
+ * Every ceremony field is set exactly once and stamped with the clock, so
+ * "became true on this payment" is just "was stamped now". Long Night is the
+ * exception: it is a property of the silence before, not of a field.
+ */
+function happened(a: Agent, kind: CeremonyKind, t: number, quietMs: number): boolean {
+  switch (kind) {
+    case "first-light":
+      return a.firstLightAt === t;
+    case "first-stranger":
+      return a.firstStrangerAt === t;
+    case "graduation":
+      return a.graduatedAt === t;
+    case "long-night":
+      return quietMs >= NIGHT_MS;
   }
 }
 
@@ -358,6 +621,7 @@ export const EMPTY_SNAPSHOT: EconomySnapshot = {
   healthy: 0,
   agents: 0,
   lit: 0,
+  graduated: 0,
   settlementRate: 1,
   perMinute: 0,
   recent: [],

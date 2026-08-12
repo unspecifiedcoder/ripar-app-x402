@@ -4,7 +4,7 @@ import { useCallback, useState } from "react";
 import { motion } from "motion/react";
 import type { Ceremony } from "@/lib/mission/renderer";
 import { EconomyProvider } from "@/lib/mission/use-economy";
-import { FirstLight } from "./first-light";
+import { CeremonyOverlay } from "./ceremony-overlay";
 import { MissionSummary } from "./mission-summary";
 import { SettlementFeed } from "./settlement-feed";
 import { StreamCanvas } from "./stream-canvas";
@@ -37,7 +37,7 @@ function Field() {
   return (
     <div className="relative h-[100dvh] w-full overflow-hidden bg-ink text-frost">
       <StreamCanvas onCeremony={onCeremony} />
-      <FirstLight ceremony={ceremony} />
+      <CeremonyOverlay ceremony={ceremony} />
       <TopRail />
 
       <div className="pointer-events-none absolute inset-0 flex flex-col gap-3 p-3 pt-[52px] sm:gap-4 sm:p-5 sm:pt-[60px]">
