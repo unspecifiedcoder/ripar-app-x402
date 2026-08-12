@@ -3,6 +3,7 @@
 import { useEffect, useMemo, useRef, useState } from "react";
 import { StreamRenderer, type Ceremony } from "@/lib/mission/renderer";
 import { useAnimationFrame, usePrefersReducedMotion } from "@/lib/mission/use-animation-frame";
+import { CLUSTERS } from "@/lib/mission/economy";
 import { useEconomy } from "@/lib/mission/use-economy";
 import { usdMicro } from "@/lib/mission/format";
 import type { Agent, Settlement } from "@/lib/mission/types";
@@ -128,18 +129,38 @@ export function StreamCanvas({ onCeremony }: { onCeremony?: (c: Ceremony | null)
                 <div className="font-plex truncate text-[12.5px] text-frost">{hover.agent.handle}</div>
                 <div className="mt-0.5 truncate text-[11px] text-haze">{hover.agent.service}</div>
               </div>
-              <Dna handle={hover.agent.handle} />
+              <Dna agent={hover.agent} />
             </div>
             <div className="mt-3 grid grid-cols-3 gap-2 border-t border-white/[0.06] pt-2.5">
               <Field label="Price" value={usdMicro(hover.agent.price)} />
               <Field label="Calls" value={hover.agent.calls.toLocaleString("en-US")} />
               <Field label="Earned" value={usdMicro(hover.agent.earned)} />
             </div>
+            {/* Where the ceremonies go to live afterwards. A moment you were not
+                watching for still leaves a record, and this is where you find
+                it — otherwise Graduation is a ring you cannot ask about. */}
+            <div className="mt-2.5 flex items-center justify-between border-t border-white/[0.06] pt-2.5">
+              <Label className="text-[8.5px]">Reach</Label>
+              <span
+                className={`font-plex tnum text-[10.5px] ${
+                  hover.agent.graduatedAt !== null ? "text-gold/90" : "text-frost/70"
+                }`}
+              >
+                {standing(hover.agent)}
+              </span>
+            </div>
           </Glass>
         </div>
       )}
     </div>
   );
+}
+
+/** An agent's ceremony record, in the fewest words that still say it. */
+function standing(a: Agent): string {
+  if (a.graduatedAt !== null) return "every cluster";
+  if (a.firstLightAt === null) return "never paid";
+  return `${a.patrons.size} / ${CLUSTERS} clusters`;
 }
 
 function Field({ label, value }: { label: string; value: string }) {

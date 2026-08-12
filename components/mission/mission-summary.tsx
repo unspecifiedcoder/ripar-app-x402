@@ -38,8 +38,11 @@ export function MissionSummary() {
         <Row label="Transactions" value={<Odometer value={s.txns} format={compact} />} />
         <Row label="Settlement rate" value={<Odometer value={s.settlementRate} format={(n) => percent(n)} ease={500} />} />
         <Row label="Healthy agents" value={`${s.healthy} / ${s.agents}`} />
-        {/* Ticks up the instant a First Light lands, so the ceremony has a number. */}
+        {/* These two tick up the instant a ceremony lands, so the moment has a
+            number to land in. Without them a First Light is a pretty animation;
+            with them it is the counter you just watched move. */}
         <Row label="Earning" value={`${s.lit} / ${s.agents}`} accent />
+        <Row label="Known everywhere" value={`${s.graduated} / ${s.agents}`} accent />
       </div>
     </Glass>
   );

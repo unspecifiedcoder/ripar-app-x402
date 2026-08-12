@@ -3,10 +3,18 @@
 import { AnimatePresence, motion } from "motion/react";
 import { age, usdMicro } from "@/lib/mission/format";
 import { useEconomy, useEconomySnapshot } from "@/lib/mission/use-economy";
-import type { Settlement } from "@/lib/mission/types";
+import type { CeremonyKind, Settlement } from "@/lib/mission/types";
 import { Glass, Label } from "./bits";
 
 const VISIBLE = 12;
+
+/** Short enough to sit inside a row without pushing the handle out of it. */
+const MARK: Record<CeremonyKind, string> = {
+  "first-light": "first light",
+  "first-stranger": "stranger",
+  "long-night": "returned",
+  graduation: "graduated",
+};
 
 /**
  * The right panel: what just happened, newest first.
@@ -70,8 +78,16 @@ function Row({
           }`}
         />
         <div className="min-w-0 flex-1">
-          <div className="font-plex truncate text-[11.5px] leading-[15px] text-frost/95">
-            {agents[settlement.to]?.handle}
+          <div className="font-plex flex items-center gap-1.5 text-[11.5px] leading-[15px] text-frost/95">
+            <span className="truncate">{agents[settlement.to]?.handle}</span>
+            {/* A ceremony row is still just a settlement — it earns one mark and
+                no more. The moment itself already happened on the field; this is
+                the receipt, and a receipt should not shout. */}
+            {settlement.ceremony && (
+              <span className="shrink-0 rounded-[3px] border border-gold/30 px-1 py-px text-[7.5px] uppercase tracking-[0.14em] text-gold/85">
+                {MARK[settlement.ceremony]}
+              </span>
+            )}
           </div>
           <div className="font-plex truncate text-[10px] leading-[14px] text-haze">
             <span className="text-haze/70">from </span>

@@ -34,6 +34,18 @@ export function age(ms: number): string {
   return `${Math.floor(s / 3600)}h`;
 }
 
+/**
+ * Spoken form, for a sentence rather than a table. `age` is for rows that have
+ * to line up; this is for the one place on screen that says something out loud.
+ */
+export function duration(ms: number): string {
+  const m = Math.round(ms / 60_000);
+  if (m < 1) return "under a minute";
+  if (m < 60) return `${m} minute${m === 1 ? "" : "s"}`;
+  const h = Math.round(m / 60);
+  return `${h} hour${h === 1 ? "" : "s"}`;
+}
+
 /** Clock reading for the top rail, derived from the simulation's own elapsed time. */
 export function stamp(elapsedMs: number): string {
   const total = Math.floor(elapsedMs / 1000);
