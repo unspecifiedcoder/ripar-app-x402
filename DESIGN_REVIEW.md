@@ -201,6 +201,13 @@ console.log('fps',(1000/(f.reduce((a,b)=>a+b)/f.length)).toFixed(1))})(l);
 
 ## Extension points for the ceremonies branch
 
+> **Built.** All five landed on `feature/ceremonies-v1` — see
+> [`CEREMONIES.md`](./CEREMONIES.md). The seams described below held, and that
+> document picks up from here, including what changed in the economy to make
+> them work and how to add a sixth. Long Night was deliberately reinterpreted as
+> an agent's own silence rather than the operator's absence; the reasoning is
+> there. The rest of this section is kept as the original plan.
+
 The next branch is First Light, First Stranger, Long Night, Graduation and DNA.
 The seams are already cut:
 
