@@ -1,0 +1,32 @@
+# Line endings.
+#
+# Everything committed here is already LF in the index — the repository has
+# always been consistent. What was missing was anything telling git to keep the
+# working tree that way, so a Windows editor rewriting a file with CRLF left it
+# permanently "modified" against an identical blob. The symptom was every file
+# in the repo showing as changed with no change in it, and `gh` warning about a
+# hundred uncommitted files on every push.
+#
+# `text=auto eol=lf` normalises on the way in and checks out LF everywhere,
+# including on Windows. Nothing in this project needs CRLF: the toolchain is
+# Node, the CI is Linux, and Windows editors have handled LF for years.
+
+* text=auto eol=lf
+
+# Never touched, in either direction. `text=auto` guesses these correctly from
+# their contents, but a guess is not worth relying on for the ones we know.
+*.png binary
+*.jpg binary
+*.jpeg binary
+*.gif binary
+*.ico binary
+*.webp binary
+*.woff binary
+*.woff2 binary
+*.ttf binary
+*.otf binary
+*.pdf binary
+
+# CRLF here is not cosmetic — it is the difference between a script that runs
+# and `bad interpreter: no such file or directory`.
+*.sh text eol=lf
