@@ -22,16 +22,21 @@ document only covers what was added on top.
 
 ## Read this first
 
-**The visual design has still never been looked at.** Same as v1: it builds, it
-type-checks, it runs twelve simulated minutes headless without throwing, and I
-have never seen a frame of it. Every aesthetic claim below is intent. The
-ceremonies are the most visually ambitious thing on the screen and the most
-likely to be wrong. Open it before you trust any of it.
+**This has now actually been looked at**, which was not true of v1. Every
+ceremony was captured rendering in a real browser at 1600×1000 and the results
+are in [Verifying](#verifying). Four things were wrong and are fixed; they are
+listed there rather than quietly folded in, because they are the kind of thing
+that gets reintroduced.
 
-**What is verified** is the part a screenshot would not have caught anyway: that
-all four moments actually fire, at a watchable pace, on a roster this size, and
-that the state machine driving them cannot leave the world dimmed. See
-[Verifying](#verifying).
+Two caveats remain:
+
+- **Only at one size, and only in headless Chrome on a CPU.** Nothing has been
+  opened on a phone, at an ultrawide, or on a real GPU. Performance is still
+  unmeasured on hardware anybody would actually use.
+- **Graduation has never been seen.** It is the rarest of the four — two or
+  three per ten minutes — and it did not fire inside any capture window. The
+  simulation confirms it fires and the smoke test confirms it completes its
+  state machine, but nobody has looked at what it draws.
 
 ---
 
@@ -185,6 +190,38 @@ fitted to this roster, and a plausible-looking change can silently stop a
 ceremony ever firing — which is not a failure you will spot by looking, because
 the field carries on settling perfectly happily with a moment that never comes.
 
+### What looking at it actually caught
+
+Screenshots were taken by driving a real browser over the DevTools Protocol,
+polling the DOM for a ceremony caption and capturing the instant one appeared.
+None of the four problems below were visible from the code, the type checker, or
+the headless smoke test. All are fixed; they are recorded because they are the
+kind of thing that comes back.
+
+**The field used less than half the height it had.** `layout.ts` normalised both
+axes by a single combined maximum, so the wider axis decided the fate of the
+narrower one: x overflowed to about 1.7, everything was scaled by 0.58, and y —
+which only ever reached 0.8 — came out at 0.46. A full-bleed hero with a dead
+band across the bottom third of it. Now normalised per axis, and recentred on
+the actual bounding box rather than assuming the cloud is symmetric about the
+origin.
+
+**The panels did not recede during a ceremony.** The field dimmed to 18% and the
+glass stayed at 100%, leaving a bright gold revenue figure as the loudest thing
+on screen during a moment about one agent. It mattered practically too: the
+field is full-bleed, so a ceremony can fire for an agent sitting *behind* a
+panel — the first First Light captured was almost entirely hidden by the
+settlements feed. The instruments now recede with everything else.
+
+**The caption could sit anywhere.** Positioned at the agent's canvas coordinates
+with no clamping, so a ceremony near an edge put its own name off-screen. Now
+clamped inside the viewport.
+
+**First Stranger's arc came from nowhere.** The payer was drawn at ordinary
+resting brightness, so the caption named an agent you could not find at the far
+end of the line. It is now lifted while it is reaching, and gets a departure
+ring.
+
 ---
 
 ## What I changed my mind about
@@ -214,17 +251,22 @@ payment actually arrives and only then starts counting its release.
 
 ## What still feels unfinished
 
-- **All of v1's open items**, unchanged: the look is unverified, performance on a
-  real GPU is unmeasured, mobile has never been opened, nothing is keyboard
-  reachable.
+- **Performance on a real GPU is still unmeasured**, mobile has never been
+  opened, and nothing is keyboard reachable. All inherited from v1.
+- **Graduation has never been seen rendering.** See the top of this document.
 - **Ceremonies are unreachable without waiting.** There is no way to replay one,
   and no way to ask "show me the last First Light". Roughly 12% of the time the
   field is dimmed for a moment; if you look away you have simply missed it. A
   quiet log of the last few, in the feed panel, is probably the next thing.
-- **The overlay can sit off-screen.** It is positioned at the node's canvas
-  coordinates with no clamping, so a ceremony for an agent near the bottom edge
-  will have its caption run past it. The hover card flips at 250px from the right
-  edge; this does nothing equivalent.
+- **The caption is clamped, not laid out.** It no longer leaves the viewport,
+  but for an agent near an edge it now sits at the clamp boundary rather than
+  under its own node, so the line between name and subject gets long. The hover
+  card flips sides at 250px from the right edge; this should probably do
+  something equivalent instead of clamping.
+- **The feed announces a ceremony before the field does.** The row and its badge
+  appear the instant the economy settles, while the renderer is still walking the
+  payment across a three-second arc. It is not wrong — the feed is a ledger and
+  the field is a dramatisation — but it does spoil the reveal slightly.
 - **Nothing is audible.** Four moments that stop the world and none of them make
   a sound. If sound happens it wants a small module beside the renderer with the
   same discipline: no React, no per-frame allocation, muted until asked for.

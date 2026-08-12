@@ -23,12 +23,14 @@ untouched, and `app/globals.css` gained one additive block at the end.
 
 ## Read this first
 
-**The visual design has never been looked at.** I built it, type-checked it,
-built it for production and it renders without errors — but the browser
-screenshots failed to save and I could not read a single frame back. Every
-aesthetic claim below is intent, not observation. **Open it before you trust
-any of it.** If something looks wrong, it probably is, and it is my fault rather
-than a subtlety you are missing.
+**The visual design was never looked at on this branch.** It has since been
+captured and reviewed on `feature/ceremonies-v1` — see the "What looking at it
+actually caught" section of [`CEREMONIES.md`](./CEREMONIES.md). One of the
+problems found there is a bug in this branch's `layout.ts`: the field was using
+less than half the height it had, and the fix lives on the ceremonies branch.
+
+Everything below was written before any of it had been seen, so treat the
+aesthetic claims as intent rather than observation.
 
 **Performance is unresolved.** See [Performance](#performance).
 
