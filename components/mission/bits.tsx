@@ -3,6 +3,7 @@
 import { useRef } from "react";
 import { cn } from "@/lib/utils";
 import { dna } from "@/lib/mission/dna";
+import type { Agent } from "@/lib/mission/types";
 import { useAnimationFrame } from "@/lib/mission/use-animation-frame";
 
 /**
@@ -83,17 +84,21 @@ export function Pulse({ className }: { className?: string }) {
 }
 
 /**
- * Agent DNA, in its placeholder form: a strand grown from the handle alone.
- * See lib/mission/dna.ts for what it is meant to become.
+ * Agent DNA: the last fifteen things that happened to this agent, as a strand.
+ * Height is earning cadence, gold marks a payer from outside its cluster, and a
+ * short dim bar is a refund. See lib/mission/dna.ts.
  */
-export function Dna({ handle, className }: { handle: string; className?: string }) {
-  const strands = dna(handle);
+export function Dna({ agent, className }: { agent: Agent; className?: string }) {
+  const strands = dna(agent);
   return (
     <div className={cn("flex h-5 items-end gap-[2px]", className)} aria-hidden>
       {strands.map((s, i) => (
         <span
           key={i}
-          className={cn("w-[2px] rounded-full", s.warm ? "bg-gold/70" : "bg-haze/45")}
+          className={cn(
+            "w-[2px] rounded-full",
+            s.empty ? "bg-haze/15" : s.scar ? "bg-haze/30" : s.warm ? "bg-gold/80" : "bg-haze/50"
+          )}
           style={{ height: `${Math.round(s.height * 100)}%` }}
         />
       ))}
