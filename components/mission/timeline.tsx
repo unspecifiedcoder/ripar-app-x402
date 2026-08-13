@@ -29,7 +29,7 @@ export function Timeline() {
   const bucketMs = TIMELINE_SPAN_MS / bars.length;
 
   return (
-    <Glass className="w-full px-5 pt-3.5 pb-4">
+    <Glass className="w-full p-5">
       <div className="flex items-center justify-between">
         <Label className="text-haze/75">Last 6 minutes</Label>
         <div className="font-plex tnum text-[10px] text-haze">
@@ -42,7 +42,7 @@ export function Timeline() {
       </div>
 
       <div
-        className="group relative mt-2.5 h-[30px] cursor-crosshair"
+        className="group relative mt-2.5 h-[24px] cursor-crosshair"
         onPointerLeave={() => setCursor(null)}
         onPointerMove={(e) => {
           const r = e.currentTarget.getBoundingClientRect();
@@ -50,7 +50,7 @@ export function Timeline() {
           setCursor(Math.max(0, Math.min(bars.length - 1, i)));
         }}
       >
-        <div className="flex h-full items-end gap-[2px]">
+        <div className="flex h-full items-end gap-px">
           {bars.map((b, i) => {
             const h = Math.max(2, (b / max) * 100);
             // The right-hand end is the present, and reads warmer for it.
@@ -58,7 +58,7 @@ export function Timeline() {
             return (
               <span
                 key={i}
-                className="flex-1 rounded-t-[1.5px] transition-[opacity,background-color] duration-150"
+                className="flex-1 rounded-t-[1.5px] transition-[height,opacity,background-color] duration-300 ease-out"
                 style={{
                   height: `${h}%`,
                   // Cool and quiet at the old end, warming only as it reaches

@@ -15,11 +15,11 @@ export function MissionSummary() {
   const s = useEconomySnapshot();
 
   return (
-    <Glass className="w-full p-5 sm:p-6">
+    <Glass className="w-full p-5">
       {/* No panel title. The first line already says what this is, and a header
           above it would only be there because panels usually have headers. */}
       <div>
-        <Label>Today&rsquo;s revenue</Label>
+        <Label>Revenue</Label>
         <div className="mt-2 flex items-baseline gap-1">
           <Odometer
             value={s.revenue}
@@ -41,8 +41,8 @@ export function MissionSummary() {
         {/* These two tick up the instant a ceremony lands, so the moment has a
             number to land in. Without them a First Light is a pretty animation;
             with them it is the counter you just watched move. */}
-        <Row label="Earning" value={`${s.lit} / ${s.agents}`} accent />
-        <Row label="Known everywhere" value={`${s.graduated} / ${s.agents}`} accent />
+        <Row label="First light" value={`${s.lit} / ${s.agents}`} accent />
+        <Row label="Graduated" value={`${s.graduated} / ${s.agents}`} accent />
       </div>
     </Glass>
   );

@@ -90,6 +90,21 @@ const CEREMONY_LOCKOUT_MS = 9_000;
 const CEREMONY_RETRY_MS = 6_000;
 const CEREMONY_IDLE_MS = 12_000;
 
+/**
+ * Minimum spacing per kind, because three of the four draw from pools nothing
+ * refills: there are only so many agents that have never been paid, never met an
+ * outsider, or sit one cluster short. Spent at the scheduler's natural pace they
+ * run dry inside an hour or two and the screen ends up staging nothing but Long
+ * Nights, which regenerate. This rations a finite supply rather than pacing the
+ * rhythm — the rhythm is the unordered draw below, and it is left alone.
+ */
+const COOL: Record<CeremonyKind, number> = {
+  "first-light": 240_000,
+  "first-stranger": 100_000,
+  graduation: 100_000,
+  "long-night": 0,
+};
+
 /** Sentinel clusters for a staged payment's origin. */
 const ANY = -1;
 const ANY_STRANGER = -2;
@@ -119,6 +134,13 @@ export class Economy {
   private ceremonyDue = 0;
   private ceremonyLock = 0;
   private lastKind: CeremonyKind | null = null;
+  /** Earliest clock each kind may be staged again. */
+  private cool: Record<CeremonyKind, number> = {
+    "first-light": 0,
+    "first-stranger": 0,
+    graduation: 0,
+    "long-night": 0,
+  };
 
   private revenue = 0;
   private txns = 0;
@@ -234,10 +256,10 @@ export class Economy {
 
     // Roughly one burst a minute and one lull every couple of minutes.
     if (this.burstUntil < 0 && this.lullUntil < 0) {
-      if (this.r() < 0.00022) {
+      if (this.r() < 0.0066) {
         this.burstUntil = this.t + between(this.r, 1_800, 4_600);
         this.burstTarget = this.hot();
-      } else if (this.r() < 0.00009) {
+      } else if (this.r() < 0.0033) {
         this.lullUntil = this.t + between(this.r, 2_800, 6_500);
       }
     }
@@ -399,6 +421,7 @@ export class Economy {
     if (this.t >= this.ceremonyDue && this.t >= this.ceremonyLock) {
       const pool: { kind: CeremonyKind; who: number }[] = [];
       for (const kind of SCHEDULED) {
+        if (this.t < this.cool[kind]) continue;
         const who = this.candidate(kind);
         if (who >= 0) pool.push({ kind, who });
       }
@@ -413,6 +436,7 @@ export class Economy {
         const choice = from[Math.floor(this.r() * from.length)];
 
         this.lastKind = choice.kind;
+        this.cool[choice.kind] = this.t + COOL[choice.kind];
         this.pending = choice.kind;
         this.pendingFrom = this.originFor(choice.kind, choice.who);
         this.ceremonyDue = this.t + between(this.r, CEREMONY_MIN_MS, CEREMONY_MAX_MS);

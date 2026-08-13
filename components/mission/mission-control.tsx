@@ -83,7 +83,7 @@ function Field() {
             <SettlementFeed />
           </Panel>
 
-          <Panel delay={1.3} className="pointer-events-auto hidden shrink-0 sm:block">
+          <Panel delay={1.3} className="pointer-events-auto hidden w-[268px] shrink-0 sm:block">
             <Timeline />
           </Panel>
         </div>

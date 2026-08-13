@@ -24,7 +24,11 @@ export function useAnimationFrame(fn: (dtMs: number, timeMs: number) => void, ac
 
     const loop = (now: number) => {
       raf = requestAnimationFrame(loop);
-      const dt = now - last;
+      // The one bound every clock on the page shares. A main-thread stall hands
+      // back the whole gap at once, and without this the renderer and the
+      // odometers would spend it while the simulation — which clamps to the same
+      // 100ms internally — spends a frame, and the two never line up again.
+      const dt = Math.min(100, Math.max(0, now - last));
       last = now;
       cb.current(dt, now);
     };

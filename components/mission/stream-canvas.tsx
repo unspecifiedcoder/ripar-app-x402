@@ -27,8 +27,11 @@ export function StreamCanvas({ onCeremony }: { onCeremony?: (c: Ceremony | null)
   const rect = useRef({ left: 0, top: 0, width: 0, height: 0 });
   const buffer = useRef<Settlement[]>([]);
   const hoverId = useRef(-1);
+  const applied = useRef({ w: -1, h: -1, dpr: -1 });
 
-  const [hover, setHover] = useState<{ agent: Agent; x: number; y: number } | null>(null);
+  const [hover, setHover] = useState<{ agent: Agent; x: number; y: number; flip: boolean } | null>(
+    null
+  );
 
   useEffect(() => {
     renderer.onCeremony = onCeremony ?? null;
@@ -42,12 +45,29 @@ export function StreamCanvas({ onCeremony }: { onCeremony?: (c: Ceremony | null)
     const cv = canvas.current;
     if (!el || !cv) return;
 
+    // A scroll moves the canvas on the page; it does not change the drawing
+    // surface. Keeping the two apart matters on iOS, where rubber-band scroll
+    // fires continuously.
+    const syncRect = () => {
+      const r = el.getBoundingClientRect();
+      rect.current = { ...rect.current, left: r.left, top: r.top };
+    };
+
     const measure = () => {
       const r = el.getBoundingClientRect();
       const w = Math.max(1, Math.floor(r.width));
       const h = Math.max(1, Math.floor(r.height));
       // Past 2× the extra pixels cost real frames and buy nothing visible.
       const dpr = Math.min(2, window.devicePixelRatio || 1);
+
+      // Reassigning cv.width reallocates the backing store — tens of megabytes
+      // at DPR 2 — and renderer.resize rebuilds the whole sky. Neither is worth
+      // doing to arrive at the size we already have.
+      const a = applied.current;
+      if (w === a.w && h === a.h && dpr === a.dpr) {
+        rect.current = { left: r.left, top: r.top, width: w, height: h };
+        return;
+      }
 
       cv.width = Math.floor(w * dpr);
       cv.height = Math.floor(h * dpr);
@@ -66,22 +86,37 @@ export function StreamCanvas({ onCeremony }: { onCeremony?: (c: Ceremony | null)
       renderer.fontFamily = getComputedStyle(cv).fontFamily || renderer.fontFamily;
       renderer.resize(w, h);
       rect.current = { left: r.left, top: r.top, width: w, height: h };
+      applied.current = { w, h, dpr };
     };
 
     measure();
-    const ro = new ResizeObserver(measure);
+
+    // Dragging a window edge fires the observer far faster than we can rebuild
+    // a sky, so a run of them costs one rebuild rather than dozens.
+    let pending = 0;
+    const ro = new ResizeObserver(() => {
+      if (pending) return;
+      pending = requestAnimationFrame(() => {
+        pending = 0;
+        measure();
+      });
+    });
     ro.observe(el);
-    window.addEventListener("scroll", measure, { passive: true });
+    window.addEventListener("scroll", syncRect, { passive: true });
     return () => {
       ro.disconnect();
-      window.removeEventListener("scroll", measure);
+      if (pending) cancelAnimationFrame(pending);
+      window.removeEventListener("scroll", syncRect);
     };
   }, [renderer]);
+
+  useEffect(() => {
+    renderer.reducedMotion = reduced;
+  }, [renderer, reduced]);
 
   useAnimationFrame((dt, now) => {
     const c = ctx.current;
     if (!c) return;
-    renderer.reducedMotion = reduced;
 
     const buf = buffer.current;
     buf.length = 0;
@@ -93,15 +128,18 @@ export function StreamCanvas({ onCeremony }: { onCeremony?: (c: Ceremony | null)
     if (id !== hoverId.current) {
       hoverId.current = id;
       const p = renderer.hoveredPoint();
-      setHover(a && p ? { agent: a, x: p.x, y: p.y } : null);
+      // Which side the card opens on is decided here, with the hover, rather
+      // than during render: a resize between the two leaves it pinned to a side
+      // that no longer has room for it.
+      setHover(
+        a && p ? { agent: a, x: p.x, y: p.y, flip: p.x > rect.current.width - 250 } : null
+      );
     }
   });
 
   const move = (e: React.PointerEvent) => {
     renderer.setPointer(e.clientX - rect.current.left, e.clientY - rect.current.top);
   };
-
-  const flip = hover ? hover.x > rect.current.width - 250 : false;
 
   return (
     <div ref={wrap} className="absolute inset-0 overflow-hidden">
@@ -120,7 +158,7 @@ export function StreamCanvas({ onCeremony }: { onCeremony?: (c: Ceremony | null)
           style={{
             left: hover.x,
             top: hover.y,
-            transform: `translate(${flip ? "calc(-100% - 22px)" : "22px"}, -50%)`,
+            transform: `translate(${hover.flip ? "calc(-100% - 22px)" : "22px"}, -50%)`,
           }}
         >
           <Glass className="w-[236px] p-3.5">
@@ -159,7 +197,7 @@ export function StreamCanvas({ onCeremony }: { onCeremony?: (c: Ceremony | null)
 /** An agent's ceremony record, in the fewest words that still say it. */
 function standing(a: Agent): string {
   if (a.graduatedAt !== null) return "every cluster";
-  if (a.firstLightAt === null) return "never paid";
+  if (a.firstLightAt === null) return "never earned";
   return `${a.patrons.size} / ${CLUSTERS} clusters`;
 }
 

@@ -11,9 +11,9 @@ const VISIBLE = 12;
 /** Short enough to sit inside a row without pushing the handle out of it. */
 const MARK: Record<CeremonyKind, string> = {
   "first-light": "first light",
-  "first-stranger": "stranger",
-  "long-night": "returned",
-  graduation: "graduated",
+  "first-stranger": "first stranger",
+  "long-night": "long night",
+  graduation: "graduation",
 };
 
 /**
@@ -31,13 +31,13 @@ export function SettlementFeed() {
 
   return (
     <Glass className="flex h-full w-full flex-col overflow-hidden">
-      {/* The top rail already carries one live indicator. A second one here was
-          just a second thing blinking at you. */}
+      {/* A live indicator sat here once. Nothing on this screen needs to claim it
+          is live while twelve rows arrive under it. */}
       <div className="px-5 pt-5 pb-3">
         <Label>Settlements</Label>
       </div>
 
-      <div className="min-h-0 flex-1 overflow-hidden px-2 pb-2 sm:px-3 sm:pb-3">
+      <div className="min-h-0 flex-1 overflow-hidden px-3 pb-3">
         <AnimatePresence initial={false}>
           {rows.map((r) => (
             <Row key={r.id} settlement={r} now={economy.now()} agents={economy.agents} />
@@ -68,13 +68,13 @@ function Row({
     >
       {/* The flash. Fires once, on the frame the row is born. */}
       {!refunded && (
-        <span className="pointer-events-none absolute inset-0 animate-[missionFlash_1s_ease-out_forwards] rounded-[7px] bg-mint" />
+        <span className="pointer-events-none absolute inset-0 animate-[missionFlash_1s_ease-out_forwards] rounded-[7px] bg-gold" />
       )}
 
       <div className="relative flex h-[44px] items-center gap-2.5 rounded-[7px] px-2">
         <span
           className={`h-[5px] w-[5px] shrink-0 rounded-full ${
-            refunded ? "bg-haze/60" : "bg-gold shadow-[0_0_8px_rgba(232,182,90,0.85)]"
+            refunded ? "bg-haze/60" : "bg-gold/90"
           }`}
         />
         <div className="min-w-0 flex-1">

@@ -35,35 +35,37 @@ export function CeremonyOverlay({ ceremony }: { ceremony: Ceremony | null }) {
           // so a ceremony can fire for an agent sitting in a corner, and a
           // caption for a moment you cannot read is worse than no caption.
           style={{
-            left: `clamp(190px, ${visible.x}px, calc(100vw - 190px))`,
+            left: `clamp(200px, ${visible.x}px, calc(100vw - 200px))`,
             top: `clamp(88px, ${visible.y + 34}px, calc(100dvh - 168px))`,
           }}
           initial={{ opacity: 0, y: 10 }}
           animate={{ opacity: 1, y: 0 }}
           exit={{ opacity: 0, y: -6 }}
-          transition={{ duration: 0.7, ease: [0.16, 1, 0.3, 1] }}
+          transition={{ duration: 0.4, ease: [0.16, 1, 0.3, 1] }}
         >
           <div className="flex flex-col items-center text-center">
             {/* The rule draws itself open under the moment, once. */}
             <motion.span
               className={visible.kind === "long-night" && visible.phase === "rising"
-                ? "h-px bg-haze/45"
-                : "h-px bg-gold/60"}
+                ? "h-px bg-haze/45 transition-colors duration-[600ms] ease-out"
+                : "h-px bg-gold/60 transition-colors duration-[600ms] ease-out"}
               initial={{ width: 0 }}
               animate={{ width: 72 }}
-              transition={{ duration: 0.9, ease: [0.16, 1, 0.3, 1] }}
+              transition={{ duration: 0.5, ease: [0.16, 1, 0.3, 1] }}
             />
             <span
-              className={`font-plex mt-3 text-[9.5px] uppercase tracking-[0.42em] ${
+              className={`font-plex mt-3 text-[9.5px] uppercase tracking-[0.42em] transition-colors duration-[600ms] ease-out ${
                 visible.phase === "rising" ? "text-haze" : "text-gold"
               }`}
             >
               {TITLE[visible.kind]}
             </span>
-            <span className="font-plex mt-2 text-[15px] tracking-[-0.01em] text-frost">
+            <span className="font-plex mt-2.5 text-[22px] tracking-[-0.02em] text-frost">
               {visible.handle}
             </span>
-            <span className="mt-1.5 max-w-[280px] text-[11px] text-haze">{caption(visible)}</span>
+            <span className="mt-2 max-w-[320px] text-[12px] leading-[1.55] text-frost/65">
+              {caption(visible)}
+            </span>
           </div>
         </motion.div>
       )}
@@ -91,7 +93,7 @@ const TITLE: Record<CeremonyKind, string> = {
 function caption(c: Ceremony): string {
   switch (c.kind) {
     case "first-light":
-      return `${c.service} · paid for the first time`;
+      return `the first time anyone paid for ${c.service}`;
     case "first-stranger":
       return c.payer
         ? `${c.payer} found it, from the other side of the network`
@@ -99,7 +101,7 @@ function caption(c: Ceremony): string {
     case "long-night":
       return c.phase === "rising"
         ? `dark for ${duration(c.quietMs)}`
-        : `${duration(c.quietMs)} of silence · someone came back`;
+        : "and then a payment landed";
     case "graduation":
       return "every cluster in the network has paid it";
   }

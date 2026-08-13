@@ -172,6 +172,8 @@ export class StreamRenderer {
     /** When the payment landed, in ceremony-local ms. -1 while still in flight. */
     litAt: number;
     particle: Particle | null;
+    /** Whether React has already been told the moment is over. */
+    released: boolean;
   } | null = null;
 
   constructor(private readonly agents: Agent[]) {
@@ -278,7 +280,7 @@ export class StreamRenderer {
     this.drawNodes(ctx, time, -1);
     this.drawCirclets(ctx, time);
     this.drawParticles(ctx, null);
-    this.drawRings(ctx, false);
+    this.drawRings(ctx, false, 0);
 
     // The ceremony: everything that is not this moment recedes, and only what
     // the moment is about keeps its light.
@@ -293,7 +295,7 @@ export class StreamRenderer {
       // gap between them, so the agent that reached across stays lit too.
       if (cer.kind === "first-stranger" && cer.from >= 0) this.drawNodes(ctx, time, cer.from);
       this.drawParticles(ctx, cer.particle);
-      this.drawRings(ctx, true);
+      this.drawRings(ctx, true, env);
     }
 
     ctx.globalCompositeOperation = "source-over";
@@ -320,9 +322,10 @@ export class StreamRenderer {
     p.to = s.to;
     p.t = 0;
     // Distance sets the base, and every payment then varies by up to ±15% so no
-    // two ever cross the field in lockstep.
+    // two ever cross the field in lockstep. Reduced motion lengthens the trip:
+    // the payments glide rather than hurry.
     const jitter = 0.85 + ((s.id * 2654435761) % 1000) / 1000 * 0.3;
-    const slow = this.reducedMotion ? 0.6 : 1;
+    const slow = this.reducedMotion ? 1.35 : 1;
     p.dur = ceremonial && kind
       ? CEREMONY[kind].travel * slow
       : (520 + dist * 1.35) * jitter * slow;
@@ -342,6 +345,7 @@ export class StreamRenderer {
         t: 0,
         litAt: -1,
         particle: p,
+        released: false,
       };
       // A departure ring at the far end, so the reach has a beginning as well
       // as an arrival. Only First Stranger gets one: it is the only moment
@@ -508,12 +512,12 @@ export class StreamRenderer {
         break;
       case "long-night":
         // Slow and singular. Nothing is celebrating; somebody just came back.
-        this.ring(x, y, 210, 2600, RGB.gold, true);
+        this.ring(x, y, 210, 2000, RGB.gold, true);
         break;
       case "graduation":
         // The widest ring on the screen, and the only one that leaves a mark
         // behind it — see drawCirclets.
-        this.ring(x, y, 250, 2400, RGB.goldHot, true);
+        this.ring(x, y, 250, 2000, RGB.goldHot, true);
         this.ring(x, y, 150, 1900, RGB.gold, true);
         this.ring(x, y, 78, 1400, RGB.goldHot, true);
         break;
@@ -566,11 +570,17 @@ export class StreamRenderer {
     const hold = CEREMONY[c.kind].hold;
     if (since >= hold) {
       this.ceremony = null;
-      this.onCeremony?.(null);
+      if (!c.released) this.onCeremony?.(null);
       return 0;
     }
     if (since > hold - CEREMONY_OUT_MS) {
-      return 1 - easeOut((since - (hold - CEREMONY_OUT_MS)) / CEREMONY_OUT_MS);
+      // The caption leaves with the world rather than after it, so the release
+      // is one gesture: glass, type and field all coming back together.
+      if (!c.released) {
+        c.released = true;
+        this.onCeremony?.(null);
+      }
+      return 1 - easeInOut((since - (hold - CEREMONY_OUT_MS)) / CEREMONY_OUT_MS);
     }
     return 1;
   }
@@ -660,10 +670,11 @@ export class StreamRenderer {
     }
   }
 
-  /** True while this agent is the subject of a Long Night that has not landed yet. */
-  private isCold(i: number): boolean {
+  /** True while this agent is the subject of a moment whose payment is still crossing. */
+  private isWaiting(i: number): boolean {
     const c = this.ceremony;
-    return c !== null && c.kind === "long-night" && c.particle !== null && c.agent === i;
+    return c !== null && (c.kind === "long-night" || c.kind === "first-light")
+      && c.particle !== null && c.agent === i;
   }
 
   /**
@@ -683,6 +694,9 @@ export class StreamRenderer {
     ctx.beginPath();
     let any = false;
     for (let i = 0; i < this.agents.length; i++) {
+      // The economy marks a graduate the moment the payment is sent, so hold the
+      // mark back until it lands and let the arrival flash resolve into it.
+      if (this.ceremony?.agent === i && this.ceremony.particle !== null) continue;
       if (this.agents[i].graduatedAt === null) continue;
       if (this.nodeReveal(i) < 0.9) continue;
       // Scaled off the node's own radius, so the ring breathes with its agent
@@ -746,10 +760,11 @@ export class StreamRenderer {
       const a = this.agents[i];
       const e = this.energy[i];
       const f = pop(this.flash[i]);
-      // An agent waiting out its Long Night is drawn exactly like one that has
-      // never been paid at all: cold, small, indistinguishable from the dark.
-      // That is the whole moment — it looks gone, and then it isn't.
-      const lit = a.firstLightAt !== null && !this.isCold(i);
+      // An agent waiting out its Long Night — or its First Light — is drawn
+      // exactly like one that has never been paid at all: cold, small,
+      // indistinguishable from the dark. That is the whole moment in both cases:
+      // the light belongs to the payment arriving, not to the payment leaving.
+      const lit = a.firstLightAt !== null && !this.isWaiting(i);
       const hot = this.hover === i;
       const x = this.ox[i];
       const y = this.oy[i];
@@ -818,7 +833,7 @@ export class StreamRenderer {
     ctx.globalAlpha = 1;
   }
 
-  private drawRings(ctx: CanvasRenderingContext2D, ceremonial: boolean) {
+  private drawRings(ctx: CanvasRenderingContext2D, ceremonial: boolean, env: number) {
     ctx.globalCompositeOperation = "lighter";
     for (const r of this.rings) {
       if (!r.active || r.ceremonial !== ceremonial) continue;
@@ -826,7 +841,9 @@ export class StreamRenderer {
       // ripple leaves fast and then hangs, which is how a real one behaves.
       const t = easeOutQuint(r.t);
       // Squared falloff keeps it from lingering as a hard circle at the end.
-      const alpha = Math.pow(1 - r.t, 2) * (r.ceremonial ? 0.5 : 0.26);
+      // Ceremonial rings ride the envelope: the loudest marks on the screen have
+      // to leave with the world, not hold full alpha under a lifting veil.
+      const alpha = Math.pow(1 - r.t, 2) * (r.ceremonial ? 0.5 * env : 0.26);
       if (alpha <= 0.004) continue;
       ctx.beginPath();
       ctx.arc(r.x, r.y, 2 + r.radius * t, 0, Math.PI * 2);
