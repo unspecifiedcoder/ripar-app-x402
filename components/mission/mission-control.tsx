@@ -83,7 +83,12 @@ function Field() {
             <SettlementFeed />
           </Panel>
 
-          <Panel delay={1.3} className="pointer-events-auto hidden w-[268px] shrink-0 sm:block">
+          {/* Full width, deliberately. Boxing this to the summary panel's 268px
+              lines the two up neatly and puts 72 buckets in 3.7px each, which
+              turns six minutes of history into a sparkline in a corner. The
+              timeline is the only thing on screen with a time axis; it gets the
+              width. */}
+          <Panel delay={1.3} className="pointer-events-auto hidden shrink-0 sm:block">
             <Timeline />
           </Panel>
         </div>
