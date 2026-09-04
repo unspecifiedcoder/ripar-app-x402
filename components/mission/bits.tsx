@@ -3,7 +3,7 @@
 import { useEffect, useRef } from "react";
 import { cn } from "@/lib/utils";
 import { dna } from "@/lib/mission/dna";
-import { useAnimationFrame } from "@/lib/mission/use-animation-frame";
+import { useAnimationFrame, usePrefersReducedMotion } from "@/lib/mission/use-animation-frame";
 
 /**
  * The panel surface. Everything on this screen floats above the stream rather
@@ -56,6 +56,7 @@ export function Odometer({
   const el = useRef<HTMLSpanElement>(null);
   const shown = useRef(value);
   const target = useRef(value);
+  const reduced = usePrefersReducedMotion();
   // Synced in an effect, not during render. Render can run more than once for a
   // single commit and can be thrown away entirely, so a ref written there is
   // written for work that may never land. The animation reads target.current
@@ -66,6 +67,11 @@ export function Odometer({
   }, [value]);
 
   useAnimationFrame((dt) => {
+    if (reduced) {
+      shown.current = target.current;
+      if (el.current) el.current.textContent = format(shown.current);
+      return;
+    }
     const gap = target.current - shown.current;
     if (Math.abs(gap) < 1e-7) return;
     shown.current += gap * Math.min(1, dt / ease);

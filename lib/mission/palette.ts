@@ -16,6 +16,7 @@ export const PALETTE = {
   mint: "#9EE6C8",
   frost: "#E8EDF7",
   dim: "#6B7A93",
+  mist: "#98A2B6",
 } as const;
 
 export const RGB = {
@@ -25,6 +26,7 @@ export const RGB = {
   frost: [232, 237, 247],
   dim: [107, 122, 147],
   dome: [18, 26, 43],
+  mist: [152, 162, 182],
 } as const;
 
 export const rgba = (c: readonly number[], a: number) => `rgba(${c[0]},${c[1]},${c[2]},${a})`;

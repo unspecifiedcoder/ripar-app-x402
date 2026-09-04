@@ -3,6 +3,7 @@
 import { AnimatePresence, motion } from "motion/react";
 import { age, usdMicro } from "@/lib/mission/format";
 import { useEconomy, useEconomySnapshot } from "@/lib/mission/use-economy";
+import { usePrefersReducedMotion } from "@/lib/mission/use-animation-frame";
 import type { Settlement } from "@/lib/mission/types";
 import { Glass, Label } from "./bits";
 
@@ -20,6 +21,12 @@ export function SettlementFeed() {
   const economy = useEconomy();
   const s = useEconomySnapshot();
   const rows = s.recent.slice(0, VISIBLE);
+  // Read once here, at the panel that mounts for the life of the page — not
+  // inside Row, which remounts fresh for every incoming settlement. The hook
+  // starts false and only settles to the real value after an effect commits;
+  // reading it per-row would let each newly arrived settlement's first render
+  // slip through with a false reading and animate anyway.
+  const reduced = usePrefersReducedMotion();
 
   return (
     <Glass className="flex h-full w-full flex-col overflow-hidden">
@@ -32,7 +39,7 @@ export function SettlementFeed() {
       <div className="min-h-0 flex-1 overflow-hidden px-2 pb-2 sm:px-3 sm:pb-3">
         <AnimatePresence initial={false}>
           {rows.map((r) => (
-            <Row key={r.id} settlement={r} now={economy.now()} agents={economy.agents} />
+            <Row key={r.id} settlement={r} now={economy.now()} agents={economy.agents} reduced={reduced} />
           ))}
         </AnimatePresence>
       </div>
@@ -44,22 +51,32 @@ function Row({
   settlement,
   now,
   agents,
+  reduced,
 }: {
   settlement: Settlement;
   now: number;
   agents: { handle: string }[];
+  reduced: boolean;
 }) {
   const refunded = settlement.state === "refunded";
+  // Reduced motion: the row is present, not animated in (DESIGN_SYSTEM.md
+  // §1.7 — settlement arrival's reduced-motion row reads "row is present, no
+  // glow"). MotionConfig's reducedMotion="user" only neutralises "unsafe"
+  // transform values (x/y/scale/rotate); it does not touch height/opacity,
+  // so a zero-duration transition is what actually stops this row's own
+  // enter/exit animation from registering under reduced motion.
   return (
     <motion.div
       initial={{ height: 0, opacity: 0 }}
       animate={{ height: 44, opacity: 1 }}
       exit={{ height: 0, opacity: 0 }}
-      transition={{ duration: 0.26, ease: [0.22, 1, 0.36, 1] }}
+      transition={reduced ? { duration: 0 } : { duration: 0.26, ease: [0.22, 1, 0.36, 1] }}
       className="relative overflow-hidden"
     >
-      {/* The flash. Fires once, on the frame the row is born. */}
-      {!refunded && (
+      {/* The flash. Fires once, on the frame the row is born. Gated on the
+          hook (not just the CSS guard below) so it never mounts at all under
+          reduced motion — belt and braces. */}
+      {!refunded && !reduced && (
         <span className="pointer-events-none absolute inset-0 animate-[missionFlash_1s_ease-out_forwards] rounded-[7px] bg-mint" />
       )}
 
