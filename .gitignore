@@ -39,3 +39,8 @@ yarn-error.log*
 # typescript
 *.tsbuildinfo
 next-env.d.ts
+
+# Written into the project root by `next build` / `next dev` (Next.js 16 agent rules).
+# Generated, not authored; reread from node_modules/next/dist/docs when needed.
+AGENTS.md
+CLAUDE.md
