@@ -353,3 +353,56 @@ GitHub mark is near-black.
 colour in the interface (D-002) and its presence in the sidebar corner does
 not dilute gold; a wordmark is read as a name, not as a state.
 
+---
+
+## D-017 — No tracked capitals, on the mission screen either
+
+**Decision.** The `label` style is 11px sentence case with no
+letter-spacing. The mission screen's `Label` component (`font-plex
+text-[9.5px] uppercase tracking-[0.2em]`) changes to match, so "REVENUE"
+becomes "Revenue" and "LAST 6 MINUTES" becomes "Last 6 minutes".
+
+**Why.** Reviewed against the frontend-design skill's list of generated-page
+tells: a tracked-out all-caps eyebrow above every heading is the first on
+it, and the mission screen has it on every panel. It was the least
+considered choice on the screen that was otherwise the most considered.
+Sentence-case Plex at 11px is more legible at the sizes an instrument uses
+and is less like everyone else's dark dashboard, which is the point of
+having an identity.
+
+**Cost.** The mission screenshots in `DESIGN_REVIEW.md` and `CEREMONIES.md`
+will no longer match exactly. That is acceptable; P-11 carries the change.
+
+---
+
+## D-018 — IBM Plex Sans replaces Inter
+
+**Decision.** Prose is set in IBM Plex Sans; evidence stays in IBM Plex
+Mono. Inter is unloaded.
+
+**Why.** Inter is the sans a generator reaches for on any brief, and this
+brief has a subject. Plex was drawn for engineering documentation; Sans and
+Mono share skeleton and colour, so a caption and the value it describes
+read as one voice on one line, which is what D-003 is for. One superfamily
+is also one fewer decision for every implementer.
+
+**Rejected.** A display serif for headings. It would be the second most
+common generated look (cream-and-serif inverted), and this product has no
+headline moment that wants a serif — its most characteristic thing is a row
+of settlements, not a sentence.
+
+---
+
+## D-019 — One orchestrated moment
+
+**Decision.** The workspace has no page-enter fade, no panel stagger, and no
+hover motion beyond a colour change. The settlement-arrival bloom is the
+only animation that plays without the user asking for it. The mission
+screen keeps its staged opening, which is that screen's own single moment.
+
+**Why.** Reviewed against the same list: fade-and-slide-up on every section
+is the default entrance of a generated page, and §1.7 had it. Motion is
+information; a page where everything moves has nothing that means
+anything. The bloom means money moved. It has to be the only thing that
+moves so that it can.
+

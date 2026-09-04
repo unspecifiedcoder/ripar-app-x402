@@ -58,7 +58,9 @@ than around the old one.
   color-scheme: dark;`. Add `--color-mist: #98a2b6` to the mission `@theme`
   block, and add `mist` to `PALETTE`/`RGB` in `palette.ts` with the same value.
 - Move the `IBM_Plex_Mono` load from `app/mission/layout.tsx` to
-  `app/layout.tsx`; apply `plex.variable` on `<html>` beside `inter.variable`.
+  `app/layout.tsx`. **Add `IBM_Plex_Sans`** (`--font-plex-sans`, weights
+  400/500/600) and **remove Inter** (D-018); `--font-sans` maps to Plex Sans.
+  Apply both variables on `<html>`.
   Delete the wrapper div's font class in the mission layout (keep `bg-ink`
   and `data-mission`).
 - Scrollbars: `scrollbar-color: rgba(255,255,255,0.14) transparent`; thumb
@@ -249,7 +251,8 @@ right), When (`mist` right), Proof. Rows keyed by `id`. Wrapped in
 positioned radial `gold/[0.18]` → 0 over 1100ms behind the row). Reduced
 motion: no bloom, no y. Header row says "Live x402 settlements" `h2` with,
 on the right, `mono` `haze` "round 66,982,883 · 2.7s" (the chain status)
-and the "Open the explorer" ghost link. Shows 20 rows; "Load more" as a
+and the "Open the explorer" ghost link (the chain status is a sentence, not a
+dot-joined string — §2.6a). Shows 20 rows; "Load more" as a
 ghost button reveals 20 more from `runs`.
 
 `Stream` takes `readOnly?: boolean` (hides Load more and the explorer link;
@@ -412,7 +415,10 @@ shows rows with real round numbers.
 **Files.** `components/mission/mission-control.tsx`, `components/mission/
 top-rail.tsx`, `lib/mission/renderer.ts` (label collision only).
 
-**Spec.** Below 640: the field is full-bleed and the panels become a single
+**Spec.** `Label` in `components/mission/bits.tsx` → `font-plex text-[11px]
+text-haze` with no `uppercase` and no tracking (D-017); every call site's
+text becomes sentence case ("Revenue", "Settlements", "Last 6 minutes").
+Below 640: the field is full-bleed and the panels become a single
 bottom sheet (`glass`, 40dvh, a drag handle) holding the summary, with the
 settlements list scrolling inside it; the timeline is hidden. Canvas labels
 below 640: draw only the hovered agent's label and the ceremony agent's —

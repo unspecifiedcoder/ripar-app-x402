@@ -8,6 +8,15 @@ Identity in one sentence: **ledger-dark instrumentation with a single warm
 signal, where the only things that glow are things that actually happened
 on-chain.**
 
+A note on the ground. "Near-black with one accent" is a shape a generator
+reaches for. It is used here because the product already had it — the
+mission screen chose ink and gold before this document existed, and the
+finding this system rests on is that the *real* data was denied that
+identity. What keeps it from being the default: gold is not decoration but
+a claim (D-002); the type is a subject-specific superfamily, not Inter on
+black (D-018); there are no tracked caps, no eyebrows, no section
+entrances, and one moment of motion. Remove those and it would be the tell.
+
 ---
 
 ## 1. Foundations
@@ -18,11 +27,17 @@ Two faces. The split is by *kind of content*, never by size or emphasis.
 
 | Role | Face | Used for |
 |---|---|---|
-| Prose | Inter (`--font-inter`) | sentences, headings, buttons, navigation, captions that describe |
+| Prose | IBM Plex Sans (`--font-plex-sans`) | sentences, headings, buttons, navigation, captions that describe |
 | Evidence | IBM Plex Mono (`--font-plex`) | addresses, amounts, rounds, tx ids, timestamps, prices, handles, anything a reader might copy or compare |
 
-Plex Mono moves from `app/mission/layout.tsx` to `app/layout.tsx`. Both
-faces are loaded once, app-wide.
+One superfamily, two genres. Plex was drawn for engineering documentation,
+and the Sans and Mono share skeleton, x-height and colour, so a sentence and
+the value it describes sit on one line as one voice — which is the whole
+point of D-003. Inter is retired (D-018): it is the sans a generator reaches
+for on any brief, and this brief has a subject.
+
+Both faces load once in `app/layout.tsx`. Plex Sans weights 400 / 500 / 600;
+Plex Mono 400 / 500.
 
 **Scale.** Pixels, not rems, because every value here was chosen against
 a rendered screen and rems invite drift.
@@ -35,9 +50,19 @@ a rendered screen and rems invite drift.
 | `body` | 13.5 / 20 | 400 | 0 | paragraphs, subtitles |
 | `table` | 12.5 / 18 | 400 | 0 | table cells |
 | `caption` | 11.5 / 16 | 400 | 0 | help text under a control |
-| `label` | 10 / 14 | 500 | +0.12em, uppercase | column heads, section eyebrows, badges |
+| `label` | 11 / 14 | 500 | 0, sentence case | column heads, badges, the name above a figure |
 | `mono` | inherits size | 400 | 0 | always with `tnum` (tabular numerals) |
 | `mono-lg` | 22 / 26 | 400 | −0.01em | a single figure meant to be read from across the room |
+
+No tracked-out capitals anywhere. A column head reads "Paid to", not
+"PAID TO"; a metric is named "Settled to you", not "SETTLED TO YOU". Caps
+with letter-spacing are the single most recognisable tell of a generated
+dashboard, and they cost legibility at the sizes an instrument uses. The
+mission screen's `Label` component changes to match (D-017).
+
+No eyebrows. A panel has a name if a reader needs one to understand the
+figure beneath it, set as `label` directly above the figure; it does not
+have a small tracked line above a heading for rhythm.
 
 Numerals are tabular everywhere a number can change (`font-variant-numeric:
 tabular-nums`). A column of amounts must not jitter when a digit changes.
@@ -172,8 +197,8 @@ animation here answers "what changed?"; none answers "isn't this nice?".
 | Moment | Motion | Duration / ease | Reduced motion |
 |---|---|---|---|
 | **A real settlement arrives** | row enters at `opacity 0 → 1`, `y 6 → 0`; simultaneously a gold radial glow (`gold/[0.18]` → 0) blooms behind the row and fades | 220ms enter · 1100ms glow · ease-out `[0.16,1,0.3,1]` | row is present, no glow |
-| Page / view enters | content `opacity 0 → 1`, `y 8 → 0` | 320ms, same ease | instant |
-| Glass panels on first paint | staggered 60ms apart, same as above | 320ms | instant |
+| Page / view enters | none. The view is there. | — | — |
+| Glass panels on first paint | none. | — | — |
 | Hover on a row | background `→ glass-raised` | 120ms linear | same (not motion) |
 | Button press | `scale 0.985` | 80ms | same |
 | Odometer (a live figure changing) | digits ease toward target | time-constant 240ms | snaps |
@@ -182,9 +207,18 @@ animation here answers "what changed?"; none answers "isn't this nice?".
 | Dialog / palette | `opacity 0 → 1`, `scale 0.98 → 1` | 160ms | instant |
 | Success (a transaction built / copied) | the affected value flashes `mint` for 600ms then returns | 600ms | colour change only |
 
-The settlement-arrival bloom is the product's signature (D-005). It is
-triggered only by the data layer reporting a row it has not delivered before.
-It must not fire on initial load, on re-sort, on poll, or on re-mount.
+The settlement-arrival bloom is the product's one orchestrated moment
+(D-005). Everything else on the page holds still so that it reads. There is
+no fade-and-rise on sections, no stagger on panels, no motion on hover
+beyond a colour change: those are the entrances every generated page has,
+and a page that moves everywhere has nothing that means anything. The
+bloom is triggered only by the data layer reporting a row it has not
+delivered before. It must not fire on initial load, on re-sort, on poll,
+or on re-mount.
+
+The mission screen's staged opening (sky, agents, glass) is the exception
+and stays: it is one sequence, it plays once, and it is that screen's own
+orchestrated moment.
 
 `prefers-reduced-motion: reduce` is honoured everywhere through the existing
 `usePrefersReducedMotion` hook. Reduced motion removes *movement*; it keeps
@@ -260,6 +294,16 @@ Metric panels (the instrument strip): eyebrow, then the figure in `mono-lg`
 `caption` `mist` saying what the figure counts. Four across on desktop, two
 on tablet, one on phone, separated by a `white/[0.06]` rule — not by gaps.
 
+### 2.6a Writing in the interface
+
+Sentence case throughout, including buttons and column heads. A button says
+what happens: "Build the unsigned transaction", "Copy", "Load 20 more".
+Facts sit in a sentence or in their own column, never joined into a string
+with middle dots — "Round 66,982,883, 2.7s between blocks" is two facts a
+reader can parse; "66,982,883 · 2.7s" is a string they have to decode.
+Errors say what could not be read and from where; they do not apologise.
+An empty state names the figure that is zero and why (§2.14).
+
 ### 2.7 Table
 
 The workhorse. The mission settlements panel is the reference.
@@ -274,7 +318,9 @@ The workhorse. The mission settlements panel is the reference.
 - Addresses: `shortAddr` (6…4), `mono`, `mist`, full address in `title=`.
   Clicking copies; the value flashes `mint` (§1.7 success).
 - The proof column is always last and always says `verify ↗` as a ghost
-  link to the explorer. It is never an icon alone.
+  link to the explorer. It is never an icon alone. The ↗ is kept on purpose:
+  it is the conventional sign for "leaves this site", and here that is the
+  information — the proof is somewhere Ripar does not control.
 - Sticky head when the table scrolls. Max 20 rows before an explicit
   "Load more" — never infinite.
 - On phone (< 640): the table becomes a list. Each row is a two-line item:
