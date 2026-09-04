@@ -4,7 +4,7 @@ body {
   background: var(--color-ink);
   color: var(--color-frost);
   color-scheme: dark;
-  font-family: var(--font-inter), ui-sans-serif, system-ui, sans-serif;
+  font-family: var(--font-plex-sans), ui-sans-serif, system-ui, sans-serif;
   -webkit-font-smoothing: antialiased;
 }
 
@@ -164,7 +164,7 @@ select:focus-visible,
   /* secondary text that must be read; haze fails 4.5:1 on glass (see DESIGN_SYSTEM.md §1.2) */
   --color-mist: #98a2b6;
   --font-plex: var(--font-plex-mono), ui-monospace, SFMono-Regular, Menlo, monospace;
-  --font-sans: var(--font-inter);
+  --font-sans: var(--font-plex-sans);
 }
 
 /* Breathes rather than blinks. A blink on a dashboard reads as an alarm. */

@@ -1,14 +1,14 @@
 import type { Metadata } from "next";
-import { Inter, IBM_Plex_Mono } from "next/font/google";
+import { IBM_Plex_Mono, IBM_Plex_Sans } from "next/font/google";
 import "./globals.css";
 import { ToastProvider } from "@/components/ui/toast";
 import { StoreSync } from "@/components/store-sync";
 import { AppMotionConfig } from "@/components/motion-config";
 
-const inter = Inter({
-  variable: "--font-inter",
+const plexSans = IBM_Plex_Sans({
+  variable: "--font-plex-sans",
   subsets: ["latin"],
-  weight: ["300", "400", "500", "600", "700"],
+  weight: ["400", "500", "600"],
 });
 
 // Evidence — addresses, amounts, ids, timestamps — is always Plex Mono, app-wide
@@ -35,7 +35,7 @@ export default function RootLayout({
   children: React.ReactNode;
 }>) {
   return (
-    <html lang="en" className={`${inter.variable} ${plex.variable}`}>
+    <html lang="en" className={`${plexSans.variable} ${plex.variable}`}>
       <body className="antialiased">
         <AppMotionConfig>
           <ToastProvider>
