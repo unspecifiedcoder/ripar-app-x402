@@ -5,6 +5,7 @@ import {
   createElement,
   useContext,
   useEffect,
+  useRef,
   useState,
   type ReactNode,
 } from "react";
@@ -181,6 +182,13 @@ export type RealRun = {
   amountUsdc: number;
   from: string;
   to: string;
+  /**
+   * True only on the poll that first delivers this settlement (D-014). Set
+   * by `markArrivals`, never inferred from `when`, `round`, or position —
+   * see that function for the actual rule. Always `false` at construction
+   * here; `useWorkspacePoll` is the only place that flips it.
+   */
+  arrived: boolean;
 };
 
 async function fetchSettlements(net: ChainNetwork, signal?: AbortSignal, cap = 40): Promise<RealRun[]> {
@@ -223,6 +231,7 @@ async function fetchSettlements(net: ChainNetwork, signal?: AbortSignal, cap = 4
           amountUsdc: (x.amount ?? 0) / 1e6,
           from: t.sender,
           to: x.receiver,
+          arrived: false,
         });
       }
     }
@@ -320,12 +329,52 @@ function measureBlockTime(runs: RealRun[]): number | null {
   return per > 0.2 && per < 30 ? per : null;
 }
 
+/**
+ * Marks which runs are newly arrived, pure and stateless (D-014).
+ *
+ * `seen` empty (the initial load) marks every run `arrived: false` and
+ * records every id — the first paint is never a "money just moved" moment.
+ * Otherwise a run is `arrived: true` exactly when its id was not already in
+ * `seen`. Either way `next` is `seen` with every current id added, so a run
+ * that arrived last poll and is still present is no longer new next time —
+ * `arrived` "resets" simply because its id is now in `seen`, with no
+ * separate reset step. An id that drops out of `runs` and later returns is
+ * NOT re-marked, because it was never removed from `seen`.
+ *
+ * Never mutates `seen` or `runs`: `next` is a fresh Set, and a run object is
+ * only replaced (via spread) when its `arrived` value actually changes.
+ */
+export function markArrivals(
+  seen: ReadonlySet<string>,
+  runs: RealRun[]
+): { runs: RealRun[]; next: Set<string> } {
+  if (seen.size === 0) {
+    return {
+      runs: runs.map((r) => (r.arrived === false ? r : { ...r, arrived: false })),
+      next: new Set(runs.map((r) => r.id)),
+    };
+  }
+
+  const next = new Set(seen);
+  const marked = runs.map((r) => {
+    const arrived = !seen.has(r.id);
+    if (arrived) next.add(r.id);
+    return r.arrived === arrived ? r : { ...r, arrived };
+  });
+  return { runs: marked, next };
+}
+
 function useWorkspacePoll(enabled: boolean): Loadable<Workspace> {
   const [s, setS] = useState<Loadable<Workspace>>({
     data: null,
     status: "loading",
     error: null,
   });
+  // Ids delivered on some prior successful poll, so `markArrivals` can tell a
+  // settlement that just landed from one already shown (D-014). A poll that
+  // errors never touches this — the existing catch branch below leaves it
+  // (and the last-shown data) alone.
+  const seen = useRef<Set<string>>(new Set());
 
   useEffect(() => {
     if (!enabled) return;
@@ -347,10 +396,17 @@ function useWorkspacePoll(enabled: boolean): Loadable<Workspace> {
         const net: ChainNetwork = manifest?.network === "mainnet" ? "mainnet" : "testnet";
         const { algod: ALGOD } = CHAIN[net];
 
-        const [runs, status] = await Promise.all([
+        const [rawRuns, status] = await Promise.all([
           fetchSettlements(net, ac.signal),
           j<{ "last-round": number }>(`${ALGOD}/v2/status`, ac.signal),
         ]);
+
+        // Mark arrivals before anything downstream touches `runs`, so the
+        // aggregates below (mine, agents, block time) see the same rows a
+        // view would render.
+        const { runs: marked, next } = markArrivals(seen.current, rawRuns);
+        seen.current = next;
+        const runs = marked;
 
         const head = status["last-round"];
         // Block time from the settlements already in hand, not two more round
