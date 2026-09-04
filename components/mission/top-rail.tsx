@@ -18,7 +18,7 @@ export function TopRail() {
         <Mark />
         <span className="font-plex text-[12px] tracking-[0.14em] text-frost">RIPAR</span>
         <span className="hidden h-3 w-px bg-white/15 sm:block" />
-        <Label className="hidden text-haze/80 sm:block">Mission Control</Label>
+        <h1 className="hidden font-plex text-[11px] leading-[14px] text-haze/80 sm:block">Mission Control</h1>
       </div>
 
       <div className="flex items-center gap-2.5 sm:gap-4">

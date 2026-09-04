@@ -25,10 +25,10 @@ export function Glass({ className, children }: { className?: string; children: R
   );
 }
 
-/** Small tracked caps. The instrument voice — used for every label on screen. */
+/** The instrument voice — used for every label on screen. */
 export function Label({ className, children }: { className?: string; children: React.ReactNode }) {
   return (
-    <div className={cn("font-plex text-[9.5px] uppercase tracking-[0.2em] text-haze", className)}>
+    <div className={cn("font-plex text-[11px] leading-[14px] text-haze", className)}>
       {children}
     </div>
   );

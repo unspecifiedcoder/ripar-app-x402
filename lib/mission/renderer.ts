@@ -633,18 +633,30 @@ export class StreamRenderer {
     ctx.globalCompositeOperation = "source-over";
     ctx.textBaseline = "middle";
 
-    const top: number[] = [];
-    for (let i = 0; i < this.agents.length; i++) {
-      if (this.energy[i] < 0.28 || i === this.hover) continue;
-      top.push(i);
-    }
-    top.sort((a, b) => this.energy[b] - this.energy[a]);
+    // Below 640 the field has no room to spare: the resting labels are what
+    // collides into an unreadable band, so at that width only the two names
+    // a reader is already looking at survive — whatever the pointer is on,
+    // and whichever agent is mid-ceremony.
+    const compact = this.w < 640;
 
-    const fade = (1 - dim) * clamp01((this.intro - 0.7) / 0.3);
-    for (const i of top.slice(0, 5)) {
-      this.label(ctx, i, this.energy[i] * 0.5 * fade, false);
+    if (!compact) {
+      const top: number[] = [];
+      for (let i = 0; i < this.agents.length; i++) {
+        if (this.energy[i] < 0.28 || i === this.hover) continue;
+        top.push(i);
+      }
+      top.sort((a, b) => this.energy[b] - this.energy[a]);
+
+      const fade = (1 - dim) * clamp01((this.intro - 0.7) / 0.3);
+      for (const i of top.slice(0, 5)) {
+        this.label(ctx, i, this.energy[i] * 0.5 * fade, false);
+      }
     }
+
     if (this.hover >= 0) this.label(ctx, this.hover, 1, true);
+    if (compact && this.ceremony && this.ceremony.agent !== this.hover) {
+      this.label(ctx, this.ceremony.agent, 1, true);
+    }
   }
 
   private label(ctx: CanvasRenderingContext2D, i: number, alpha: number, strong: boolean) {
