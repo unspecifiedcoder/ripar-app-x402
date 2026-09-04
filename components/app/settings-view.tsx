@@ -5,7 +5,7 @@ import { AlertTriangle, Check, KeyRound, Plus, Trash2 } from "lucide-react";
 import { Modal } from "@/components/ui/modal";
 import { useToast } from "@/components/ui/toast";
 import { cn } from "@/lib/utils";
-import { usd } from "@/lib/app-data";
+import { usd } from "@/lib/format";
 import { ADDRESS_LENGTH, checkAddress, shortAddress } from "@/lib/algorand-address";
 import { maskKey, mintApiKey, saveSettings, useSettings, type ApiKey, type SpendCaps } from "@/lib/settings";
 import { schemaState, type SchemaState } from "@/lib/db";

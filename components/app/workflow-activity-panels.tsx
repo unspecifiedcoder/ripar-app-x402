@@ -2,7 +2,7 @@
 
 import { useMemo, useState } from "react";
 import { cn } from "@/lib/utils";
-import { usd } from "@/lib/app-data";
+import { usd } from "@/lib/format";
 import { type WorkflowEdit, type WorkflowRun } from "@/lib/workflow-activity";
 import { SortHeader } from "./bits";
 

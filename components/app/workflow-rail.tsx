@@ -1,7 +1,8 @@
 "use client";
 
 import { cn } from "@/lib/utils";
-import { costOfSteps, usd, type Workflow } from "@/lib/app-data";
+import { costOfSteps, type Workflow } from "@/lib/app-data";
+import { usd } from "@/lib/format";
 
 /** The builder's left rail: every workflow in the workspace, so switching does
  *  not mean going back to the list first. It shares its column with the tool

@@ -92,6 +92,17 @@ select:focus-visible,
 /* Live figures must not reflow as they change. */
 .tnum { font-variant-numeric: tabular-nums; font-feature-settings: "tnum" 1; }
 
+/* Loading (§2.13): a 1px line sweeping left→right across a panel's top,
+   1.2s loop. Reduced motion holds the bar static instead of removing it. */
+@keyframes ripar-sweep {
+  from { transform: translateX(-100%); }
+  to { transform: translateX(400%); }
+}
+.ripar-sweep { animation: ripar-sweep 1.2s linear infinite; }
+@media (prefers-reduced-motion: reduce) {
+  .ripar-sweep { animation: none; width: 100%; transform: none; }
+}
+
 /* ---------- React Flow: the one dark surface in a light app ----------
    A graph reads better against ink than against paper, so the builder's pane —
    and only the pane — is dark. Everything framing it stays the light app.

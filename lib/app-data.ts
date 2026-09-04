@@ -129,19 +129,16 @@ export const WORKFLOWS: Workflow[] = [
 
 /* ── derived summaries ─────────────────────────────────────────────────── */
 
-export const usd = (n: number, d = 2) =>
-  n.toLocaleString("en-US", { minimumFractionDigits: d, maximumFractionDigits: d });
-
-export const compact = (n: number) =>
-  n >= 1000 ? `${(n / 1000).toFixed(n >= 10000 ? 0 : 1)}k` : String(n);
+// `usd` and `compact` moved to lib/format.ts (P-02); every importer of them
+// now reads `@/lib/format` directly.
 
 export const STATUS_TONE: Record<Status | AgentStatus, { dot: string; text: string; label: string }> = {
-  live:    { dot: "bg-emerald-500", text: "text-emerald-700", label: "Live" },
-  working: { dot: "bg-emerald-500", text: "text-emerald-700", label: "Working" },
-  bidding: { dot: "bg-amber-500",   text: "text-amber-700",   label: "Bidding" },
-  paused:  { dot: "bg-neutral-400", text: "text-neutral-500", label: "Paused" },
-  idle:    { dot: "bg-sky-500",     text: "text-sky-700",     label: "Idle" },
-  draft:   { dot: "bg-neutral-300", text: "text-neutral-400", label: "Draft" },
-  offline: { dot: "bg-neutral-300", text: "text-neutral-400", label: "Offline" },
-  error:   { dot: "bg-rose-500",    text: "text-rose-700",    label: "Error" },
+  live:    { dot: "bg-mint",      text: "text-mint",      label: "Live" },
+  working: { dot: "bg-mint",      text: "text-mint",      label: "Working" },
+  bidding: { dot: "bg-gold/60",   text: "text-gold/70",   label: "Bidding" },
+  paused:  { dot: "bg-haze",      text: "text-haze",      label: "Paused" },
+  idle:    { dot: "bg-mist",      text: "text-mist",      label: "Idle" },
+  draft:   { dot: "bg-haze",      text: "text-haze",      label: "Draft" },
+  offline: { dot: "bg-haze",      text: "text-haze",      label: "Offline" },
+  error:   { dot: "bg-[#f28b82]", text: "text-[#f28b82]", label: "Error" },
 };

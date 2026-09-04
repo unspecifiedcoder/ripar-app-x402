@@ -4,7 +4,7 @@ import { Activity, BadgePlus, Bot, BookUser, ClipboardList, Keyboard, LayoutGrid
 import { Mark } from "@/components/ui/mark";
 import { Menu, MenuItem } from "@/components/ui/menu";
 import { cn } from "@/lib/utils";
-import { usd } from "@/lib/app-data";
+import { usd } from "@/lib/format";
 import { useWorkspace } from "@/lib/real-data";
 import { networkLabel } from "@/lib/explorer";
 import { shortAddress } from "@/lib/algorand-address";

@@ -5,7 +5,7 @@ import { Check, Link2, Loader2, Unplug } from "lucide-react";
 import { Modal } from "@/components/ui/modal";
 import { useToast } from "@/components/ui/toast";
 import { cn } from "@/lib/utils";
-import { usd } from "@/lib/app-data";
+import { usd } from "@/lib/format";
 import { introspect, type McpManifest } from "@/lib/mcp-tools";
 import { connectServer, disconnectServer, useMcpServers, type McpServer } from "@/lib/mcp-servers";
 

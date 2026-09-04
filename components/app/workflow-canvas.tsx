@@ -59,7 +59,8 @@ import {
 import { Modal } from "@/components/ui/modal";
 import { useToast } from "@/components/ui/toast";
 import { cn } from "@/lib/utils";
-import { costOfSteps, usd, type Step, type StepKind, type Workflow } from "@/lib/app-data";
+import { costOfSteps, type Step, type StepKind, type Workflow } from "@/lib/app-data";
+import { usd } from "@/lib/format";
 import { DND_MCP_TOOL, MCP_CATEGORIES, type McpTool } from "@/lib/mcp-tools";
 import { useMcpToolIndex } from "@/lib/mcp-servers";
 import { clearGraph, loadGraph, nextSeq, saveGraph, type WorkflowGraph } from "@/lib/workflow-graph";

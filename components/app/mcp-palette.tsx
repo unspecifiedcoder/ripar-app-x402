@@ -14,7 +14,7 @@ import {
   X,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
-import { usd } from "@/lib/app-data";
+import { usd } from "@/lib/format";
 import {
   DND_MCP_TOOL,
   MCP_CATEGORIES,

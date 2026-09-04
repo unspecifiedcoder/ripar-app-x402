@@ -498,8 +498,9 @@ export function useWorkspace(): Loadable<Workspace> {
   return shared ?? own;
 }
 
-export const shortAddr = (a: string, head = 6, tail = 4) =>
-  !a ? "—" : a.length <= head + tail + 1 ? a : `${a.slice(0, head)}…${a.slice(-tail)}`;
+// Moved to lib/format.ts (P-02); re-exported so existing importers of
+// `@/lib/real-data` keep working unchanged.
+export { shortAddr } from "./format";
 
 export const ago = (ms: number) => {
   if (!ms) return "—";
