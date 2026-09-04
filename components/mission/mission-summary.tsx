@@ -11,11 +11,11 @@ import { Glass, Label, Odometer } from "./bits";
  * as an instrument tracking something continuous instead of a table being
  * refreshed.
  */
-export function MissionSummary() {
+export function MissionSummary({ flat = false }: { flat?: boolean }) {
   const s = useEconomySnapshot();
 
-  return (
-    <Glass className="w-full p-5 sm:p-6">
+  const body = (
+    <>
       {/* No panel title. The first line already says what this is, and a header
           above it would only be there because panels usually have headers. */}
       <div>
@@ -41,14 +41,24 @@ export function MissionSummary() {
         {/* Ticks up the instant a First Light lands, so the ceremony has a number. */}
         <Row label="Earning" value={`${s.lit} / ${s.agents}`} accent />
       </div>
-    </Glass>
+    </>
   );
+
+  // Flat: this panel is nested inside another surface (the phone bottom
+  // sheet) that already supplies the glass, border and blur. A border that
+  // only separates two adjacent surfaces means one of them should not exist
+  // (DESIGN_SYSTEM.md §1.5), so flat drops all of that and renders plain.
+  if (flat) {
+    return <div className="w-full p-5 sm:p-6">{body}</div>;
+  }
+
+  return <Glass className="w-full p-5 sm:p-6">{body}</Glass>;
 }
 
 function Row({ label, value, accent }: { label: string; value: React.ReactNode; accent?: boolean }) {
   return (
     <div className="flex items-center justify-between py-[7px]">
-      <Label className="normal-case tracking-[0.06em] text-[10.5px] text-haze/85">{label}</Label>
+      <Label className="text-[10.5px] text-haze/85">{label}</Label>
       <span className={`font-plex tnum text-[12px] ${accent ? "text-gold/90" : "text-frost/90"}`}>{value}</span>
     </div>
   );

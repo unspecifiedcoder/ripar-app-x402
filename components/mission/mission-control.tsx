@@ -4,6 +4,7 @@ import { useCallback, useState } from "react";
 import { motion } from "motion/react";
 import type { Ceremony } from "@/lib/mission/renderer";
 import { EconomyProvider } from "@/lib/mission/use-economy";
+import { Glass } from "./bits";
 import { FirstLight } from "./first-light";
 import { MissionSummary } from "./mission-summary";
 import { SettlementFeed } from "./settlement-feed";
@@ -36,35 +37,60 @@ function Field() {
 
   return (
     <div className="relative h-[100dvh] w-full overflow-hidden bg-ink text-frost">
-      <StreamCanvas onCeremony={onCeremony} />
-      <FirstLight ceremony={ceremony} />
       <TopRail />
 
-      <div className="pointer-events-none absolute inset-0 flex flex-col gap-3 p-3 pt-[52px] sm:gap-4 sm:p-5 sm:pt-[60px]">
-        <Panel delay={1.05} className="pointer-events-auto lg:hidden">
-          <MissionSummary />
-        </Panel>
+      {/* Everything but the top rail is the field: the stream itself, the
+          panels that float over it, and — below 640 — the one sheet that
+          replaces them. `contents` keeps this a landmark without becoming a
+          layout box, so nothing inside it shifts. */}
+      <main aria-label="Mission Control" className="contents">
+        <StreamCanvas onCeremony={onCeremony} />
+        <FirstLight ceremony={ceremony} />
 
-        <div className="flex min-h-0 flex-1 gap-4">
-          <Panel delay={1.05} className="pointer-events-auto hidden w-[268px] shrink-0 self-start lg:block">
+        <div className="pointer-events-none absolute inset-0 flex flex-col gap-3 p-3 pt-[52px] sm:gap-4 sm:p-5 sm:pt-[60px]">
+          <Panel delay={1.05} className="pointer-events-auto hidden sm:block lg:hidden">
             <MissionSummary />
           </Panel>
 
-          <div className="min-w-0 flex-1" />
+          <div className="flex min-h-0 flex-1 gap-4">
+            <Panel delay={1.05} className="pointer-events-auto hidden w-[268px] shrink-0 self-start lg:block">
+              <MissionSummary />
+            </Panel>
 
-          <Panel delay={1.18} className="pointer-events-auto hidden w-[318px] shrink-0 lg:block">
+            <div className="min-w-0 flex-1" />
+
+            <Panel delay={1.18} className="pointer-events-auto hidden w-[318px] shrink-0 lg:block">
+              <SettlementFeed />
+            </Panel>
+          </div>
+
+          <Panel delay={1.18} className="pointer-events-auto hidden h-[34dvh] shrink-0 sm:block lg:hidden">
             <SettlementFeed />
+          </Panel>
+
+          <Panel delay={1.3} className="pointer-events-auto hidden shrink-0 sm:block">
+            <Timeline />
           </Panel>
         </div>
 
-        <Panel delay={1.18} className="pointer-events-auto h-[34dvh] shrink-0 lg:hidden">
-          <SettlementFeed />
+        {/* Below 640: the field is full-bleed and the panels collapse into
+            one bottom sheet — the summary on top, the settlements scrolling
+            beneath it. At sm and up this is not rendered; nothing above
+            changes. */}
+        <Panel delay={1.18} className="pointer-events-auto fixed inset-x-0 bottom-0 z-30 sm:hidden">
+          <Glass className="flex h-[40dvh] w-full flex-col overflow-hidden rounded-b-none">
+            <div className="flex shrink-0 justify-center pt-2 pb-1">
+              <span className="h-1 w-9 rounded-full bg-white/20" />
+            </div>
+            <div className="shrink-0 border-b border-white/[0.06]">
+              <MissionSummary flat />
+            </div>
+            <div className="min-h-0 flex-1 overflow-y-auto">
+              <SettlementFeed flat />
+            </div>
+          </Glass>
         </Panel>
-
-        <Panel delay={1.3} className="pointer-events-auto hidden shrink-0 sm:block">
-          <Timeline />
-        </Panel>
-      </div>
+      </main>
     </div>
   );
 }

@@ -17,7 +17,7 @@ const VISIBLE = 12;
  * agent is on the first line because it is the subject of the sentence — this
  * is a record of who got paid, not of who spent.
  */
-export function SettlementFeed() {
+export function SettlementFeed({ flat = false }: { flat?: boolean }) {
   const economy = useEconomy();
   const s = useEconomySnapshot();
   const rows = s.recent.slice(0, VISIBLE);
@@ -28,8 +28,8 @@ export function SettlementFeed() {
   // slip through with a false reading and animate anyway.
   const reduced = usePrefersReducedMotion();
 
-  return (
-    <Glass className="flex h-full w-full flex-col overflow-hidden">
+  const body = (
+    <>
       {/* The top rail already carries one live indicator. A second one here was
           just a second thing blinking at you. */}
       <div className="px-5 pt-5 pb-3">
@@ -43,8 +43,16 @@ export function SettlementFeed() {
           ))}
         </AnimatePresence>
       </div>
-    </Glass>
+    </>
   );
+
+  // Flat: nested inside a surface (the phone bottom sheet) that already
+  // supplies the glass, border and blur — see MissionSummary's `flat`.
+  if (flat) {
+    return <div className="flex h-full w-full flex-col overflow-hidden">{body}</div>;
+  }
+
+  return <Glass className="flex h-full w-full flex-col overflow-hidden">{body}</Glass>;
 }
 
 function Row({
