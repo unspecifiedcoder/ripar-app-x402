@@ -1,11 +1,13 @@
 "use client";
 
 import { useMemo, useState } from "react";
-import { Download, ExternalLink } from "lucide-react";
+import { Download } from "lucide-react";
 import { useToast } from "@/components/ui/toast";
 import { cn } from "@/lib/utils";
-import { ago, shortAddr, useWorkspace, type ChainNetwork, type RealRun } from "@/lib/real-data";
+import { ago, useWorkspace, type ChainNetwork, type RealRun } from "@/lib/real-data";
+import { txUrl } from "@/lib/explorer";
 import { EmptyState, Metric, PageHead, SearchInput, Segmented, Sheet, SortHeader } from "./bits";
+import { Address, Table, Td, Th, Tr } from "./table";
 
 type Scope = "mine" | "all";
 type Field = "when" | "amountUsdc" | "round";
@@ -24,11 +26,6 @@ function utc(at: number): string {
   const d = new Date(at);
   return `${d.getUTCFullYear()}-${pad(d.getUTCMonth() + 1)}-${pad(d.getUTCDate())} ${pad(d.getUTCHours())}:${pad(d.getUTCMinutes())}:${pad(d.getUTCSeconds())}`;
 }
-
-/** Lora carries both networks. Which one to link is read from the chain these
- *  rows came off, not assumed — the agent settles on TestNet, and a MainNet link
- *  would land every "verify" on a transaction that does not exist. */
-const txUrl = (net: ChainNetwork, id: string) => `https://lora.algokit.io/${net}/transaction/${id}`;
 
 const cell = (v: string | number) => {
   const s = String(v);
@@ -129,14 +126,16 @@ export function ReceiptsView() {
       <PageHead
         title="Receipts"
         subtitle="One row per settlement read off Algorand — a USDC transfer that really moved. Payment goes straight from the caller to your payout address, Ripar is never in the path, so these are chain records rather than an account balance."
+        network={data?.chain.network}
         actions={
           <button
             type="button"
             onClick={exportCsv}
             disabled={rows.length === 0}
+            title={rows.length === 0 ? "No rows in view to export" : undefined}
             className={cn(
-              "inline-flex items-center gap-1.5 rounded-lg px-3 py-1.5 text-[13px] font-medium text-white transition-colors",
-              rows.length === 0 ? "cursor-not-allowed bg-neutral-300" : "bg-neutral-900 hover:bg-neutral-800"
+              "inline-flex items-center gap-1.5 rounded-[6px] border border-white/[0.10] px-3 py-1.5 text-[13px] font-medium text-mist transition-colors",
+              rows.length === 0 ? "cursor-not-allowed opacity-40" : "hover:bg-white/[0.04] hover:text-frost"
             )}
           >
             <Download size={14} /> Export {rows.length} rows as CSV
@@ -144,9 +143,9 @@ export function ReceiptsView() {
         }
       />
 
-      <div className="grid grid-cols-2 gap-px overflow-hidden rounded-xl bg-black/[0.07] sm:grid-cols-4">
+      <div className="grid grid-cols-2 gap-px overflow-hidden rounded-xl bg-white/[0.06] sm:grid-cols-4">
         {[
-          { label: "Settled in view", value: usd(totals.gross), unit: "USDC", hint: `${rows.length} ${rows.length === 1 ? "row" : "rows"}` },
+          { label: "Settled in view", value: usd(totals.gross), unit: "USDC", hint: `${rows.length} ${rows.length === 1 ? "row" : "rows"}`, settled: totals.gross > 0 },
           { label: "Average settlement", value: usd(totals.average, 3), unit: "USDC", hint: "rows in view" },
           { label: "Distinct payers", value: String(totals.payers), hint: "addresses in view" },
           {
@@ -154,10 +153,11 @@ export function ReceiptsView() {
             value: data ? usd(data.mine.earnedUsdc) : "—",
             unit: "USDC",
             hint: data ? `${data.mine.calls} settlements, all scopes` : "reading the chain…",
+            settled: (data?.mine.earnedUsdc ?? 0) > 0,
           },
         ].map((m) => (
-          <div key={m.label} className="bg-white px-4 py-4">
-            <Metric label={m.label} value={m.value} unit={m.unit} hint={m.hint} />
+          <div key={m.label} className="bg-ink px-4 py-4">
+            <Metric label={m.label} value={m.value} unit={m.unit} hint={m.hint} tone={m.settled ? "settled" : undefined} />
           </div>
         ))}
       </div>
@@ -172,14 +172,14 @@ export function ReceiptsView() {
           ]}
         />
         <SearchInput value={q} onChange={setQ} placeholder="Search address or tx…" className="w-full sm:w-[300px]" />
-        <span className="tnum ml-auto text-[12.5px] text-neutral-400">
+        <span className="tnum ml-auto text-[12.5px] text-mist">
           {rows.length} {rows.length === 1 ? "receipt" : "receipts"}
         </span>
       </div>
 
       {status === "loading" ? (
         <Sheet>
-          <p className="px-4 py-12 text-center text-[13px] text-neutral-400">reading the chain…</p>
+          <p className="px-4 py-12 text-center text-[13px] text-mist">reading the chain…</p>
         </Sheet>
       ) : status === "error" ? (
         <EmptyState
@@ -198,11 +198,11 @@ export function ReceiptsView() {
           }
           action={
             q ? (
-              <button type="button" onClick={() => setQ("")} className="rounded-lg border border-black/10 px-3 py-1.5 text-[13px] font-medium">
+              <button type="button" onClick={() => setQ("")} className="rounded-[6px] border border-white/[0.10] px-3 py-1.5 text-[13px] font-medium text-mist hover:text-frost">
                 Clear search
               </button>
             ) : scope === "mine" && counts.all > 0 ? (
-              <button type="button" onClick={() => setScope("all")} className="rounded-lg border border-black/10 px-3 py-1.5 text-[13px] font-medium">
+              <button type="button" onClick={() => setScope("all")} className="rounded-[6px] border border-white/[0.10] px-3 py-1.5 text-[13px] font-medium text-mist hover:text-frost">
                 See all {counts.all} network settlements
               </button>
             ) : undefined
@@ -210,33 +210,46 @@ export function ReceiptsView() {
         />
       ) : (
         <Sheet>
-          <div className="overflow-x-auto">
-            <table className="w-full min-w-[900px] text-[13.5px]">
-              <thead className="border-b border-black/[0.07] text-[12px]">
-                <tr>
-                  <SortHeader label="Settled (UTC)" field="when" sort={sort} onSort={toggleSort} />
-                  <th scope="col" className="px-3 py-2 text-left font-medium text-neutral-400">Payer</th>
-                  <th scope="col" className="px-3 py-2 text-left font-medium text-neutral-400">Paid to</th>
-                  <SortHeader label="Round" field="round" sort={sort} onSort={toggleSort} align="right" />
-                  <th scope="col" className="px-3 py-2 text-right font-medium text-neutral-400">Age</th>
-                  <SortHeader label="Amount" field="amountUsdc" sort={sort} onSort={toggleSort} align="right" />
-                  <th scope="col" className="px-3 py-2 text-right font-medium text-neutral-400">Tx</th>
-                </tr>
-              </thead>
-              <tbody>
-                {rows.map((r) => (
-                  <Row key={r.id} r={r} net={net} mine={r.to === payTo} />
-                ))}
-              </tbody>
-            </table>
-          </div>
+          <Table<RealRun>
+            minWidth={900}
+            rows={rows}
+            list={(r) => ({
+              primary: (
+                <span>
+                  {utc(r.when) || "—"}
+                  {r.to === payTo && <span className="ml-2 rounded bg-gold/[0.12] px-1.5 py-px text-[10.5px] font-semibold text-gold">you</span>}
+                </span>
+              ),
+              amount: usd(r.amountUsdc, 3),
+              settled: r.amountUsdc > 0,
+              secondary: `${r.from.slice(0, 6)}…${r.from.slice(-4)} to ${r.to.slice(0, 6)}…${r.to.slice(-4)}, round ${r.round.toLocaleString("en-US")}, ${ago(r.when)}`,
+              proof: { href: txUrl(r.id, net) },
+            })}
+          >
+            <thead>
+              <tr>
+                <SortHeader label="Settled (UTC)" field="when" sort={sort} onSort={toggleSort} />
+                <Th>Payer</Th>
+                <Th>Paid to</Th>
+                <SortHeader label="Round" field="round" sort={sort} onSort={toggleSort} align="right" />
+                <Th align="right">Age</Th>
+                <SortHeader label="Amount" field="amountUsdc" sort={sort} onSort={toggleSort} align="right" />
+                <Th align="right">Tx</Th>
+              </tr>
+            </thead>
+            <tbody>
+              {rows.map((r) => (
+                <Row key={r.id} r={r} net={net} mine={r.to === payTo} />
+              ))}
+            </tbody>
+          </Table>
         </Sheet>
       )}
 
       {/* One template literal rather than JSX text with holes in it: a chunk that
           follows an expression and wraps onto the next line loses its leading
           space, and this note read "Algorand testnetindexer" until it did not. */}
-      <p className="mt-2.5 text-[12px] leading-relaxed text-neutral-400">
+      <p className="mt-2.5 text-[12px] leading-relaxed text-mist">
         {`Read from the Algorand ${net} indexer by walking the x402 facilitator’s recent transactions — these are the settlements we can see, not a complete ledger. There is no endpoint column because the payment does not carry one: it credits a payout address, and the chain never records which route was called.`}
         {rows.length > 0 &&
           ` The CSV downloads exactly the ${rows.length} rows shown, in the order shown.`}
@@ -247,32 +260,23 @@ export function ReceiptsView() {
 
 function Row({ r, net, mine }: { r: RealRun; net: ChainNetwork; mine: boolean }) {
   return (
-    <tr className="border-b border-black/[0.05] last:border-0 hover:bg-black/[0.02]">
-      <td className="tnum px-3 py-2.5 font-mono text-[12px] text-neutral-600">{utc(r.when) || "—"}</td>
-      <td className="px-3 py-2.5 font-mono text-[12px] text-neutral-500" title={r.from}>
-        {shortAddr(r.from)}
-      </td>
-      <td className="px-3 py-2.5 font-mono text-[12px] text-neutral-500" title={r.to}>
-        {shortAddr(r.to)}
+    <Tr>
+      <Td kind="mono">{utc(r.when) || "—"}</Td>
+      <Td>
+        <Address value={r.from} />
+      </Td>
+      <Td>
+        <Address value={r.to} />
         {mine && (
-          <span className="ml-2 rounded bg-orange-50 px-1.5 py-px font-sans text-[10.5px] font-semibold text-accent">
+          <span className="ml-2 rounded bg-gold/[0.12] px-1.5 py-px font-sans text-[10.5px] font-semibold text-gold">
             you
           </span>
         )}
-      </td>
-      <td className="tnum px-3 py-2.5 text-right text-neutral-600">{r.round.toLocaleString("en-US")}</td>
-      <td className="px-3 py-2.5 text-right text-neutral-500">{ago(r.when)}</td>
-      <td className="tnum px-3 py-2.5 text-right font-medium">{usd(r.amountUsdc, 3)}</td>
-      <td className="px-3 py-2.5 text-right">
-        <a
-          href={txUrl(net, r.id)}
-          target="_blank"
-          rel="noreferrer"
-          className="inline-flex items-center gap-1 font-mono text-[12px] text-neutral-500 underline underline-offset-2 transition-colors hover:text-accent"
-        >
-          verify <ExternalLink size={10} />
-        </a>
-      </td>
-    </tr>
+      </Td>
+      <Td kind="mono" align="right">{r.round.toLocaleString("en-US")}</Td>
+      <Td kind="mist" align="right">{ago(r.when)}</Td>
+      <Td kind={r.amountUsdc > 0 ? "settled" : "amount"}>{usd(r.amountUsdc, 3)}</Td>
+      <Td kind="proof" href={txUrl(r.id, net)} />
+    </Tr>
   );
 }

@@ -96,9 +96,23 @@ export function Th({
   );
 }
 
-export function Tr({ children, className }: { children: ReactNode; className?: string }) {
+export function Tr({
+  children,
+  className,
+  onClick,
+}: {
+  children: ReactNode;
+  className?: string;
+  onClick?: () => void;
+}) {
   return (
-    <tr className={cn("border-b border-white/[0.06] transition-colors duration-[120ms] last:border-0 hover:bg-white/[0.04]", className)}>
+    <tr
+      onClick={onClick}
+      className={cn(
+        "border-b border-white/[0.06] transition-colors duration-[120ms] last:border-0 hover:bg-white/[0.04]",
+        className
+      )}
+    >
       {children}
     </tr>
   );
@@ -110,6 +124,7 @@ export function Td({
   align,
   title,
   href,
+  className,
 }: {
   kind?: Kind;
   children?: ReactNode;
@@ -117,12 +132,13 @@ export function Td({
   title?: string;
   /** Used by `kind="proof"` when `children` is not given. */
   href?: string;
+  className?: string;
 }) {
   const alignClass = align === "right" || kind === "amount" || kind === "settled" || kind === "proof" ? "text-right" : "text-left";
 
   if (kind === "proof") {
     return (
-      <td title={title} className={cn("px-3 py-[9px]", alignClass)}>
+      <td title={title} className={cn("px-3 py-[9px]", alignClass, className)}>
         {children ?? (
           href && (
             <a
@@ -151,7 +167,7 @@ export function Td({
             : "text-frost";
 
   return (
-    <td title={title} className={cn("px-3 py-[9px]", toneClass, alignClass)}>
+    <td title={title} className={cn("px-3 py-[9px]", toneClass, alignClass, className)}>
       {children}
     </td>
   );
