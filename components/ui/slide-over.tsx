@@ -127,7 +127,7 @@ export function SlideOver({
               <button
                 onClick={onClose}
                 aria-label="Close"
-                className="flex h-7 w-7 shrink-0 items-center justify-center rounded-[6px] text-haze transition-colors hover:bg-white/[0.08] hover:text-frost"
+                className="-my-2 -mr-2 flex h-11 w-11 shrink-0 items-center justify-center rounded-[6px] text-haze transition-colors hover:bg-white/[0.08] hover:text-frost"
               >
                 <X className="h-4 w-4" />
               </button>
