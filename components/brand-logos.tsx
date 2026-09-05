@@ -51,7 +51,7 @@ export function RiparWordmark() {
   return (
     <span className="flex items-center gap-2">
       <Mark size={28} />
-      <span className="text-xl font-semibold tracking-tight text-neutral-900">Ripar</span>
+      <span className="text-xl font-semibold tracking-tight text-frost">Ripar</span>
     </span>
   );
 }
