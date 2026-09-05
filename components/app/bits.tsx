@@ -5,9 +5,16 @@ import { Check, Copy, Search, X } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { Glass } from "@/components/mission/bits";
 import { STATUS_TONE, type AgentStatus, type Status } from "@/lib/app-data";
+import type { JobStatusName } from "@/lib/registry-chain";
 
 /** Status never rides on colour alone — the dot is paired with its label. */
-export function StatusPill({ status, className }: { status: Status | AgentStatus; className?: string }) {
+export function StatusPill({
+  status,
+  className,
+}: {
+  status: Status | AgentStatus | JobStatusName;
+  className?: string;
+}) {
   const t = STATUS_TONE[status];
   return (
     <span className={cn("inline-flex items-center gap-1.5 text-[12.5px]", t.text, className)}>
