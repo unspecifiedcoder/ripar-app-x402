@@ -105,13 +105,13 @@ export type Run = {
  *  gone out. The `price` on a step is the template's guess; what a run reports is
  *  decoded from the 402 the endpoint returns. */
 export const WORKFLOWS: Workflow[] = [
-  { id: "wf_8c21", name: "Liquidation Guard", summary: "Watches a Folks Finance position and tops up collateral before it breaches.", trigger: "cron · every 5m",
+  { id: "wf_8c21", name: "Liquidation Guard", summary: "Watches a Folks Finance position and tops up collateral before it breaches.", trigger: "cron, every 5m",
     steps: [{ name: "cron 5m", kind: "trigger" }, { name: "read health", kind: "call", price: 0.02 }, { name: "health < 1.4", kind: "condition" }, { name: "supply collateral", kind: "action" }] },
-  { id: "wf_3f70", name: "Treasury Sweep", summary: "Moves idle USDC into the yield vault once a floor is cleared.", trigger: "cron · hourly",
+  { id: "wf_3f70", name: "Treasury Sweep", summary: "Moves idle USDC into the yield vault once a floor is cleared.", trigger: "cron, hourly",
     steps: [{ name: "cron 1h", kind: "trigger" }, { name: "read balance", kind: "call", price: 0.03 }, { name: "balance > 500", kind: "condition" }, { name: "deposit", kind: "action" }] },
-  { id: "wf_5a12", name: "Feed Watchdog", summary: "Re-publishes the price feed if a quote goes stale.", trigger: "onchain · Swap",
+  { id: "wf_5a12", name: "Feed Watchdog", summary: "Re-publishes the price feed if a quote goes stale.", trigger: "onchain, on Swap",
     steps: [{ name: "on Swap", kind: "trigger" }, { name: "read quote age", kind: "call", price: 0.01 }, { name: "age > 60s", kind: "condition" }, { name: "republish", kind: "action" }] },
-  { id: "wf_9b44", name: "Invoice Reconciler", summary: "Matches incoming USDC against open invoices each morning.", trigger: "cron · daily 09:00",
+  { id: "wf_9b44", name: "Invoice Reconciler", summary: "Matches incoming USDC against open invoices each morning.", trigger: "cron, daily at 09:00",
     steps: [{ name: "cron daily", kind: "trigger" }, { name: "fetch receipts", kind: "call", price: 0.08 }, { name: "unmatched > 0", kind: "condition" }, { name: "Post message", kind: "mcp", tool: "slack.post_message" }] },
 ];
 

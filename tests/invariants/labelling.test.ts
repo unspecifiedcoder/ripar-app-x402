@@ -68,24 +68,13 @@ const ROW_DATA_EXPORTS: Record<string, string[]> = {
 
 /** Files that import row data from a generated module but are exempted from
  * requiring the `<Simulated />` marker/`simulated` disclosure, with the
- * reason on record. Anything not in this set must disclose. */
-const EXEMPT: Record<string, string> = {
-  "workflows-view.tsx":
-    "KNOWN ISSUE — not silently fixed or hidden. This view imports WORKFLOWS " +
-    "(lib/app-data.ts) both as SAVED_STEPS seed data and as the 'Start from a " +
-    "template' starter list rendered into the workflow list alongside anything " +
-    "the reader has built — i.e. generated rows presented in the same list as " +
-    "real ones, with no visible marker distinguishing them. On this branch " +
-    "there is no `<Simulated />` component and PageHead (components/app/bits.tsx) " +
-    "has no `simulated` prop at all yet — DESIGN_PLAN.md's P-02 packet adds both, " +
-    "and P-08 explicitly says 'The Workflows page head keeps simulated', i.e. it " +
-    "is expected to gain the marker once P-02 lands. Fixing this now would mean " +
-    "either inventing the marker component (a design decision out of scope for " +
-    "this task) or editing workflows-view.tsx, which the task constraints " +
-    "forbid. Recorded as exempt rather than turned red so P-00's test suite can " +
-    "land; P-02/P-08 should remove this exemption once PageHead supports " +
-    "`simulated`.",
-};
+ * reason on record. Anything not in this set must disclose.
+ *
+ * `workflows-view.tsx`'s exemption is gone: P-08 gave the Workflows page
+ * head `simulated`, so PageHead now renders `<Simulated />` there and the
+ * KNOWN ISSUE this recorded (a generated 'Start from a template' list with
+ * no visible marker) is fixed rather than merely on record. */
+const EXEMPT: Record<string, string> = {};
 
 /** Views the app documents as reading real chain/manifest data through
  * lib/real-data.ts — these must NOT carry the Simulated marker. A false

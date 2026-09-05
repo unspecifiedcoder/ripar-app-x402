@@ -119,7 +119,7 @@ async function runCall(step: Step, endpoints: RealEndpoint[], signal: AbortSigna
         ...base, executed: true, status: 402, quotedUsdc, ms, ok: true,
         detail: quotedUsdc === null
           ? `${ep.name} returned 402 but named no price in its challenge`
-          : `${ep.name} quoted ${quotedUsdc} USDC · 402 in ${ms}ms`,
+          : `${ep.name} quoted ${quotedUsdc} USDC, 402 in ${ms}ms`,
       };
     }
     return {

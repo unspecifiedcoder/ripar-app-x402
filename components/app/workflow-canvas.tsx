@@ -76,19 +76,20 @@ import { HistoryPanel, RunsPanel } from "./workflow-activity-panels";
 import { MCP_CATEGORY_ICON, McpPalette } from "./mcp-palette";
 import { WorkflowRail } from "./workflow-rail";
 
-/** One table for what a step kind looks like, shared with the list's chain. */
+/** One table for what a step kind looks like, shared with the list's chain.
+ *  Step kinds are told apart by icon and label alone (D-013) — no per-kind
+ *  colour badge or glyph tint: a fifth hue on this screen would be a legend,
+ *  not a signal. */
 export const STEP_KINDS: Record<StepKind, {
   label: string;
   Icon: typeof Clock;
-  chip: string;
-  swatch: string;
   blank: string;
 }> = {
-  trigger:   { label: "Trigger",   Icon: Clock,      chip: "bg-sky-50 text-sky-600",         swatch: "#0ea5e9", blank: "new trigger" },
-  call:      { label: "Paid call", Icon: Zap,        chip: "bg-orange-50 text-accent",       swatch: "#ff6b2b", blank: "new call" },
-  condition: { label: "Condition", Icon: GitBranch,  chip: "bg-violet-50 text-violet-600",   swatch: "#8b5cf6", blank: "new condition" },
-  action:    { label: "Action",    Icon: ArrowRight, chip: "bg-emerald-50 text-emerald-600", swatch: "#10b981", blank: "new action" },
-  mcp:       { label: "MCP tool",  Icon: Blocks,     chip: "bg-indigo-50 text-indigo-600",   swatch: "#6366f1", blank: "new tool" },
+  trigger:   { label: "Trigger",   Icon: Clock,      blank: "new trigger" },
+  call:      { label: "Paid call", Icon: Zap,        blank: "new call" },
+  condition: { label: "Condition", Icon: GitBranch,  blank: "new condition" },
+  action:    { label: "Action",    Icon: ArrowRight, blank: "new action" },
+  mcp:       { label: "MCP tool",  Icon: Blocks,     blank: "new tool" },
 };
 
 // The toolbar's kinds. An MCP step is never blank — it comes from the palette
@@ -121,61 +122,58 @@ const FIT: FitViewOptions = { padding: 0.12, minZoom: 0.4, maxZoom: 1 };
 /** Half a card, so a drop lands under the cursor rather than beside it. */
 const CARD = { w: 212, h: 52 };
 
+/** React Flow's own stylesheet sets a handle's size and colour; these `!`
+ *  utilities have to win regardless of import order. bg-ink + a soft white
+ *  ring reads as a connector on the glass; mint on hover says it is live. */
+const HANDLE =
+  "!h-2 !w-2 !rounded-full !border !border-white/[0.25] !bg-ink transition-colors hover:!border-mint";
+
 const defaultEdgeOptions: DefaultEdgeOptions = {
   type: "smoothstep",
   // The canvas is dark, so the arrow is drawn out of the ink rather than onto it.
   markerEnd: { type: MarkerType.ArrowClosed, width: 14, height: 14, color: "rgba(255,255,255,0.42)" },
+  // An edge carries no meaning until a run is standing on it — the quiet
+  // default is set here, not left to React Flow's own stylesheet.
+  style: { stroke: "rgba(255,255,255,0.22)", strokeWidth: 1.5 },
 };
 
 /* ── node bodies ───────────────────────────────────────────────────────── */
 
-/** A card's glyph wears its kind's own swatch, mixed for the dark canvas — one
- *  colour table drives the light list, the minimap and the node alike. */
-const glyph = (swatch: string) => ({
-  color: `color-mix(in srgb, ${swatch} 74%, white)`,
-  background: `color-mix(in srgb, ${swatch} 20%, transparent)`,
-  boxShadow: `inset 0 0 0 1px color-mix(in srgb, ${swatch} 30%, transparent)`,
-});
-
+/** A glass step card. Kinds are told apart by icon and label only (D-013):
+ *  the only colour that ever reaches the border is mint, and only while the
+ *  step it belongs to is the one a run is standing on. */
 function StepCard({
   kind,
   data,
   selected,
   icon: Icon = STEP_KINDS[kind].Icon,
-  swatch = STEP_KINDS[kind].swatch,
   sub = STEP_KINDS[kind].label,
   children,
 }: {
   kind: StepKind;
   data: StepData;
   selected?: boolean;
-  /** An MCP card wears its tool's category rather than the kind's own mark. */
+  /** An MCP card wears its tool's own icon rather than the kind's own mark. */
   icon?: typeof Clock;
-  swatch?: string;
   sub?: string;
   children?: ReactNode;
 }) {
   return (
     <div
       className={cn(
-        "w-[212px] rounded-xl border pb-2.5 transition-colors",
+        "w-[212px] rounded-[10px] border bg-white/[0.06] p-3 backdrop-blur-md transition-colors",
         data.running
-          ? "border-accent/70 bg-[#221408] shadow-[0_10px_30px_-14px_rgba(255,107,43,0.9)]"
+          ? "border-mint/60"
           : selected
-            ? "border-accent/55 bg-[#191b1d] shadow-[0_0_0_1px_rgba(255,107,43,0.22)]"
-            : "border-white/[0.09] bg-[#16181a] hover:border-white/20"
+            ? "border-white/[0.20]"
+            : "border-white/[0.08] hover:border-white/[0.14]"
       )}
     >
-      <div className="flex h-7 items-center gap-2 px-3 pt-2.5">
-        <span
-          style={glyph(swatch)}
-          className="flex h-6 w-6 shrink-0 items-center justify-center rounded-md"
-        >
-          <Icon size={13} />
-        </span>
+      <div className="flex items-center gap-2">
+        <Icon size={16} className="shrink-0 text-frost" />
         <span className="min-w-0 flex-1 leading-tight">
-          <span className="block truncate text-[12.5px] font-medium text-neutral-100">{data.name}</span>
-          <span className="block truncate text-[10.5px] text-white/40">{sub}</span>
+          <span className="block truncate text-[13px] font-medium text-frost">{data.name}</span>
+          <span className="block truncate text-[11px] text-haze">{sub}</span>
         </span>
       </div>
       {children}
@@ -192,7 +190,7 @@ function TriggerNode({ data, selected }: NodeProps<StepNode>) {
   return (
     <>
       <StepCard kind="trigger" data={data} selected={selected} />
-      <Handle type="source" position={Position.Right} />
+      <Handle type="source" position={Position.Right} className={HANDLE} />
     </>
   );
 }
@@ -200,16 +198,16 @@ function TriggerNode({ data, selected }: NodeProps<StepNode>) {
 function CallNode({ data, selected }: NodeProps<StepNode>) {
   return (
     <>
-      <Handle type="target" position={Position.Left} />
+      <Handle type="target" position={Position.Left} className={HANDLE} />
       <StepCard kind="call" data={data} selected={selected}>
-        <div className="mx-3 mt-2 flex items-baseline justify-between border-t border-white/[0.08] pt-2">
-          <span className="text-[10.5px] text-white/40">Price</span>
-          <span className="tnum text-[11.5px] font-medium text-white/75">
+        <div className="mt-2 flex items-baseline justify-between border-t border-white/[0.08] pt-2">
+          <span className="text-[11px] text-haze">Price</span>
+          <span className="tnum text-[11.5px] font-medium text-frost">
             {data.price ? `${usd(data.price, 3)} USDC` : "free"}
           </span>
         </div>
       </StepCard>
-      <Handle type="source" position={Position.Right} />
+      <Handle type="source" position={Position.Right} className={HANDLE} />
     </>
   );
 }
@@ -217,15 +215,15 @@ function CallNode({ data, selected }: NodeProps<StepNode>) {
 function ConditionNode({ data, selected }: NodeProps<StepNode>) {
   return (
     <>
-      <Handle type="target" position={Position.Left} />
+      <Handle type="target" position={Position.Left} className={HANDLE} />
       <StepCard kind="condition" data={data} selected={selected}>
-        <div className="mx-3 mt-2 border-t border-white/[0.08] pt-2 text-[10.5px] text-white/40">
+        <div className="mt-2 border-t border-white/[0.08] pt-2 text-[11px] text-haze">
           <div className="flex h-5 items-center">yes</div>
           <div className="flex h-5 items-center">no</div>
         </div>
       </StepCard>
-      <Handle type="source" id="yes" position={Position.Right} style={{ top: BRANCH_TOP.yes }} />
-      <Handle type="source" id="no" position={Position.Right} style={{ top: BRANCH_TOP.no }} />
+      <Handle type="source" id="yes" position={Position.Right} className={HANDLE} style={{ top: BRANCH_TOP.yes }} />
+      <Handle type="source" id="no" position={Position.Right} className={HANDLE} style={{ top: BRANCH_TOP.no }} />
     </>
   );
 }
@@ -233,9 +231,9 @@ function ConditionNode({ data, selected }: NodeProps<StepNode>) {
 function ActionNode({ data, selected }: NodeProps<StepNode>) {
   return (
     <>
-      <Handle type="target" position={Position.Left} />
+      <Handle type="target" position={Position.Left} className={HANDLE} />
       <StepCard kind="action" data={data} selected={selected} />
-      <Handle type="source" position={Position.Right} />
+      <Handle type="source" position={Position.Right} className={HANDLE} />
     </>
   );
 }
@@ -249,23 +247,22 @@ function McpNode({ data, selected }: NodeProps<StepNode>) {
 
   return (
     <>
-      <Handle type="target" position={Position.Left} />
+      <Handle type="target" position={Position.Left} className={HANDLE} />
       <StepCard
         kind="mcp"
         data={data}
         selected={selected}
         icon={tool ? MCP_CATEGORY_ICON[tool.category] : STEP_KINDS.mcp.Icon}
-        swatch={category?.swatch ?? STEP_KINDS.mcp.swatch}
-        sub={tool && category ? `MCP · ${tool.serverLabel ?? category.label}` : "MCP · tool not attached"}
+        sub={tool && category ? `MCP, ${tool.serverLabel ?? category.label}` : "MCP, tool not attached"}
       >
-        <div className="mx-3 mt-2 flex items-baseline justify-between gap-2 border-t border-white/[0.08] pt-2">
-          <span className="min-w-0 truncate font-mono text-[10px] text-white/35">{data.tool ?? "no tool"}</span>
-          <span className="tnum shrink-0 text-[11.5px] font-medium text-white/75">
+        <div className="mt-2 flex items-baseline justify-between gap-2 border-t border-white/[0.08] pt-2">
+          <span className="min-w-0 truncate font-plex text-[10px] text-haze">{data.tool ?? "no tool"}</span>
+          <span className="tnum shrink-0 text-[11.5px] font-medium text-frost">
             {data.price ? `${usd(data.price, 3)} USDC` : "free"}
           </span>
         </div>
       </StepCard>
-      <Handle type="source" position={Position.Right} />
+      <Handle type="source" position={Position.Right} className={HANDLE} />
     </>
   );
 }
@@ -387,10 +384,10 @@ const clock = (at: number) =>
 /* ── shared control styling ────────────────────────────────────────────── */
 
 const BTN =
-  "inline-flex items-center gap-1.5 rounded-lg border border-black/10 bg-white px-2.5 py-1.5 text-[12.5px] font-medium text-neutral-700 transition-colors hover:border-black/20 hover:text-neutral-900 disabled:cursor-not-allowed disabled:text-neutral-300 disabled:hover:border-black/10 disabled:hover:text-neutral-300";
+  "inline-flex items-center gap-1.5 rounded-lg border border-white/[0.10] px-2.5 py-1.5 text-[12.5px] font-medium text-mist transition-colors hover:border-white/[0.16] hover:text-frost disabled:cursor-not-allowed disabled:opacity-40 disabled:hover:border-white/[0.10] disabled:hover:text-mist";
 
 const FIELD =
-  "w-full rounded-lg border border-black/10 bg-white px-3 py-2 text-[13.5px] outline-none transition-colors placeholder:text-neutral-400 focus:border-neutral-400 disabled:cursor-not-allowed disabled:bg-neutral-50 disabled:text-neutral-400";
+  "w-full rounded-lg border border-white/[0.08] bg-black/30 px-3 py-2 text-[13.5px] text-frost outline-none transition-colors placeholder:text-haze focus:border-mint/50 disabled:cursor-not-allowed disabled:bg-black/20 disabled:text-haze";
 
 /** Icon-only toolbar control. Never unlabelled — the name is what a screen
  *  reader reads and what the tooltip shows. */
@@ -416,10 +413,10 @@ function IconButton({
       aria-label={label}
       aria-pressed={pressed}
       className={cn(
-        "inline-flex h-[30px] w-[30px] items-center justify-center rounded-lg border transition-colors disabled:cursor-not-allowed disabled:border-black/[0.07] disabled:text-neutral-300",
+        "inline-flex h-[30px] w-[30px] items-center justify-center rounded-lg border transition-colors disabled:cursor-not-allowed disabled:opacity-40",
         pressed
-          ? "border-neutral-900/25 bg-neutral-900 text-white hover:bg-neutral-800"
-          : "border-black/10 bg-white text-neutral-500 hover:border-black/20 hover:text-neutral-900"
+          ? "border-white/[0.14] bg-white/[0.10] text-frost hover:bg-white/[0.14]"
+          : "border-white/[0.10] text-mist hover:border-white/[0.16] hover:text-frost"
       )}
     >
       <Icon size={14} />
@@ -486,13 +483,13 @@ function CanvasSkeleton() {
   // does not jump when the real canvas takes over a frame later.
   return (
     <Sheet>
-      <div className="h-[45px] border-b border-black/[0.07]" />
+      <div className="h-[45px] border-b border-white/[0.08]" />
       <div className="flex flex-col md:h-[520px] md:flex-row">
-        <div className="border-b border-black/[0.07] md:w-[218px] md:shrink-0 md:border-b-0 md:border-r" />
-        <div className="flex h-[380px] min-w-0 items-center justify-center bg-[#0e0f11] md:h-auto md:flex-1">
-          <p className="animate-pulse text-[13px] text-white/45">Loading the builder…</p>
+        <div className="border-b border-white/[0.08] md:w-[218px] md:shrink-0 md:border-b-0 md:border-r" />
+        <div className="flex h-[380px] min-w-0 items-center justify-center bg-ink md:h-auto md:flex-1">
+          <p className="animate-pulse text-[13px] text-mist">Loading the builder…</p>
         </div>
-        <div className="border-t border-black/[0.07] md:w-[288px] md:shrink-0 md:border-l md:border-t-0" />
+        <div className="border-t border-white/[0.08] md:w-[288px] md:shrink-0 md:border-l md:border-t-0" />
       </div>
     </Sheet>
   );
@@ -828,7 +825,7 @@ function Canvas({
     const before = { nodes, edges };
     setNodes([]);
     setEdges([]);
-    log(`Cleared the canvas · ${before.nodes.length} ${before.nodes.length === 1 ? "step" : "steps"} removed`);
+    log(`Cleared the canvas, ${before.nodes.length} ${before.nodes.length === 1 ? "step" : "steps"} removed`);
     toast(`Cleared ${before.nodes.length} ${before.nodes.length === 1 ? "step" : "steps"}`, "default", {
       label: "Undo",
       onClick: () => {
@@ -904,7 +901,7 @@ function Canvas({
       activeId
         ? edges.map((e) =>
             e.source === activeId
-              ? { ...e, className: "edge-flow", style: { stroke: "var(--accent)", strokeWidth: 2 } }
+              ? { ...e, className: "edge-flow", style: { stroke: "var(--color-mint)", strokeWidth: 2 } }
               : e
           )
         : edges,
@@ -915,7 +912,7 @@ function Canvas({
 
   return (
     <Sheet>
-      <div className="flex flex-wrap items-center gap-1.5 border-b border-black/[0.07] px-3 py-2.5">
+      <div className="flex flex-wrap items-center gap-1.5 border-b border-white/[0.08] px-3 py-2.5">
         <IconButton
           label={rail ? "Hide the workflow list" : "Show the workflow list"}
           Icon={PanelLeft}
@@ -928,8 +925,8 @@ function Canvas({
           pressed={tools}
           onClick={() => setPanel({ tools: !tools })}
         />
-        <span aria-hidden className="mx-1 h-5 w-px bg-black/[0.08]" />
-        <span className="text-[12px] font-medium text-neutral-500">Add step</span>
+        <span aria-hidden className="mx-1 h-5 w-px bg-white/[0.08]" />
+        <span className="text-[12px] font-medium text-haze">Add step</span>
         {KIND_ORDER.map((kind) => {
           const k = STEP_KINDS[kind];
           return (
@@ -945,7 +942,7 @@ function Canvas({
               onClick={() => addStep(kind)}
               className={BTN}
             >
-              <k.Icon size={12} className="text-neutral-400" />
+              <k.Icon size={12} className="text-haze" />
               {k.label}
             </button>
           );
@@ -953,7 +950,7 @@ function Canvas({
 
         <div className="ml-auto flex flex-wrap items-center gap-1.5">
           {draftAt != null && (
-            <span className="mr-1 text-[12px] text-neutral-400">
+            <span className="mr-1 text-[12px] text-haze">
               Draft saved <span className="tnum">{clock(draftAt)}</span>
             </span>
           )}
@@ -969,9 +966,9 @@ function Canvas({
               toast(locked ? "Canvas unlocked" : "Canvas locked — steps can be read, not moved");
             }}
           />
-          <span aria-hidden className="mx-1 h-5 w-px bg-black/[0.08]" />
+          <span aria-hidden className="mx-1 h-5 w-px bg-white/[0.08]" />
           <button type="button" onClick={saveNow} className={BTN}>
-            <Save size={12} className="text-neutral-400" /> Save
+            <Save size={12} className="text-haze" /> Save
           </button>
           <IconButton
             label="Revert to the saved workflow"
@@ -984,10 +981,7 @@ function Canvas({
             type="button"
             onClick={() => onRun?.()}
             disabled={!onRun || busy}
-            className={cn(
-              "inline-flex items-center gap-1.5 rounded-lg px-3 py-1.5 text-[12.5px] font-medium text-white transition-colors",
-              !onRun || busy ? "cursor-not-allowed bg-neutral-300" : "bg-neutral-900 hover:bg-neutral-800"
-            )}
+            className="inline-flex items-center gap-1.5 rounded-lg bg-frost px-3 py-1.5 text-[12.5px] font-medium text-ink transition-colors hover:bg-frost/90 disabled:cursor-not-allowed disabled:opacity-40"
           >
             <Play size={12} /> {running ? "Running…" : "Run"}
           </button>
@@ -1044,20 +1038,20 @@ function Canvas({
             if (!to || !e.currentTarget.contains(to)) setDropping(false);
           }}
           className={cn(
-            "relative h-[380px] min-w-0 bg-[#0e0f11] md:h-auto md:flex-1",
-            dropping && (locked ? "ring-2 ring-inset ring-rose-500/50" : "ring-2 ring-inset ring-accent/50")
+            "relative h-[380px] min-w-0 bg-ink md:h-auto md:flex-1",
+            dropping && (locked ? "ring-2 ring-inset ring-[#f28b82]/50" : "ring-2 ring-inset ring-mint/50")
           )}
         >
           {locked && (
-            <span className="pointer-events-none absolute left-3 top-3 z-10 inline-flex items-center gap-1.5 rounded-full border border-white/10 bg-black/50 px-2 py-1 text-[11px] font-medium text-white/70">
+            <span className="pointer-events-none absolute left-3 top-3 z-10 inline-flex items-center gap-1.5 rounded-full border border-white/[0.10] bg-ink/70 px-2 py-1 text-[11px] font-medium text-mist">
               <Lock size={11} /> Locked
             </span>
           )}
 
           {nodes.length === 0 && (
             <div className="pointer-events-none absolute inset-0 z-10 flex flex-col items-center justify-center px-6 text-center">
-              <p className="text-[14px] font-medium text-neutral-100">No steps yet</p>
-              <p className="mt-1.5 max-w-[38ch] text-[13px] leading-relaxed text-white/50">
+              <p className="text-[14px] font-medium text-frost">No steps yet</p>
+              <p className="mt-1.5 max-w-[38ch] text-[13px] leading-relaxed text-mist">
                 Add a trigger to arm the chain, then a paid call for the work it should buy — or
                 drag an MCP tool in from the left.
               </p>
@@ -1087,22 +1081,20 @@ function Canvas({
             // the page and zoom belongs to the toolbar.
             zoomOnScroll={false}
             preventScrolling={false}
-            className="rf-canvas"
+            // React Flow's own dark palette (D-013) — the twenty hand-written
+            // canvas-scoped overrides this replaced are gone from globals.css.
+            colorMode="dark"
           >
-            <Background variant={BackgroundVariant.Dots} gap={18} size={1} color="rgba(255,255,255,0.14)" />
+            <Background variant={BackgroundVariant.Dots} gap={20} size={1} color="rgba(255,255,255,0.08)" />
             <MiniMap<StepNode>
               pannable
               zoomable
               ariaLabel="Workflow overview"
-              maskColor="rgba(0,0,0,0.55)"
-              bgColor="#141517"
+              maskColor="rgba(7,10,16,0.7)"
+              bgColor="#0b0f18"
               nodeStrokeWidth={0}
               nodeBorderRadius={3}
-              nodeColor={(n) => {
-                if (n.type !== "mcp") return STEP_KINDS[n.type].swatch;
-                const tool = n.data.tool ? catalogue.get(n.data.tool) : undefined;
-                return tool ? MCP_CATEGORIES[tool.category].swatch : STEP_KINDS.mcp.swatch;
-              }}
+              nodeColor={() => "rgba(232,237,247,0.4)"}
               style={{ width: 148, height: 96 }}
             />
           </ReactFlow>
@@ -1139,7 +1131,7 @@ function Canvas({
           <button
             type="button"
             onClick={() => setConfirmDelete(false)}
-            className="rounded-lg border border-black/10 px-3 py-1.5 text-[13px] font-medium text-neutral-700 transition-colors hover:border-black/20"
+            className="rounded-lg border border-white/[0.10] px-3 py-1.5 text-[13px] font-medium text-mist transition-colors hover:border-white/[0.16] hover:text-frost"
           >
             Keep it
           </button>
@@ -1149,7 +1141,7 @@ function Canvas({
               setConfirmDelete(false);
               onDelete?.();
             }}
-            className="rounded-lg bg-rose-600 px-3 py-1.5 text-[13px] font-medium text-white transition-colors hover:bg-rose-700"
+            className="rounded-lg bg-[#f28b82]/[0.12] px-3 py-1.5 text-[13px] font-medium text-[#f28b82] transition-colors hover:bg-[#f28b82]/[0.18]"
           >
             Delete workflow
           </button>
@@ -1220,12 +1212,12 @@ function Inspector({
   }
 
   return (
-    <aside className="flex min-h-0 flex-col border-t border-black/[0.07] md:w-[288px] md:shrink-0 md:border-l md:border-t-0">
+    <aside className="flex min-h-0 flex-col border-t border-white/[0.08] md:w-[288px] md:shrink-0 md:border-l md:border-t-0">
       <div
         role="tablist"
         aria-label="Workflow inspector"
         onKeyDown={onTabKey}
-        className="flex items-center gap-0.5 border-b border-black/[0.07] px-2 py-1.5"
+        className="flex items-center gap-0.5 border-b border-white/[0.08] px-2 py-1.5"
       >
         {TABS.map((t) => {
           const on = tab === t.id;
@@ -1242,12 +1234,12 @@ function Inspector({
               onClick={() => onTab(t.id)}
               className={cn(
                 "rounded-lg px-2 py-1 text-[12.5px] font-medium transition-colors",
-                on ? "bg-black/[0.055] text-neutral-900" : "text-neutral-500 hover:text-neutral-900"
+                on ? "bg-white/[0.08] text-frost" : "text-haze hover:text-frost"
               )}
             >
               {t.label}
               {count != null && count > 0 && (
-                <span className="tnum ml-1.5 text-[11px] text-neutral-400">{count}</span>
+                <span className="tnum ml-1.5 text-[11px] text-haze">{count}</span>
               )}
             </button>
           );
@@ -1325,22 +1317,22 @@ function PropertiesPanel({
     const to = nodes.find((n) => n.id === edge.target);
     return (
       <>
-        <h3 className="text-[13px] font-semibold text-neutral-900">Connection</h3>
-        <p className="mt-2 text-[13px] leading-relaxed text-neutral-600">
+        <h3 className="text-[13px] font-semibold text-frost">Connection</h3>
+        <p className="mt-2 text-[13px] leading-relaxed text-mist">
           {from?.data.name ?? "—"}
-          {edge.sourceHandle && <span className="text-neutral-400"> · {edge.sourceHandle}</span>}
-          <span className="mx-1.5 text-neutral-300">→</span>
+          {edge.sourceHandle && <span className="text-haze">, {edge.sourceHandle}</span>}
+          <span className="mx-1.5 text-haze">→</span>
           {to?.data.name ?? "—"}
         </p>
         {locked ? (
-          <p className="mt-4 text-[12.5px] leading-relaxed text-neutral-400">
+          <p className="mt-4 text-[12.5px] leading-relaxed text-mist">
             The canvas is locked, so connections cannot be removed.
           </p>
         ) : (
           <button
             type="button"
             onClick={() => onDeleteLink(edge.id)}
-            className="mt-4 inline-flex items-center gap-1.5 rounded-lg px-2.5 py-1.5 text-[13px] font-medium text-rose-600 transition-colors hover:bg-rose-50"
+            className="mt-4 inline-flex items-center gap-1.5 rounded-lg px-2.5 py-1.5 text-[13px] font-medium text-[#f28b82] transition-colors hover:bg-[#f28b82]/[0.12]"
           >
             <Trash2 size={13} /> Delete connection
           </button>
@@ -1353,7 +1345,7 @@ function PropertiesPanel({
     return (
       <>
         <label className="block">
-          <span className="text-[12.5px] font-medium text-neutral-700">Workflow name</span>
+          <span className="text-[12.5px] font-medium text-mist">Workflow name</span>
           <input
             value={workflow.name}
             onChange={(e) => onRename?.({ name: e.target.value })}
@@ -1363,7 +1355,7 @@ function PropertiesPanel({
         </label>
 
         <label className="mt-3 block">
-          <span className="text-[12.5px] font-medium text-neutral-700">Description</span>
+          <span className="text-[12.5px] font-medium text-mist">Description</span>
           <textarea
             value={workflow.summary}
             onChange={(e) => onRename?.({ summary: e.target.value })}
@@ -1375,28 +1367,28 @@ function PropertiesPanel({
 
         <div className="mt-3 flex items-center gap-2">
           <div className="min-w-0">
-            <div className="text-[12.5px] font-medium text-neutral-700">Workflow id</div>
-            <div className="truncate font-mono text-[11.5px] text-neutral-400">{workflow.id}</div>
+            <div className="text-[12.5px] font-medium text-mist">Workflow id</div>
+            <div className="truncate font-plex text-[11.5px] text-haze">{workflow.id}</div>
           </div>
           <CopyButton text={workflow.id} what="the workflow id" className="ml-auto" />
         </div>
 
-        <dl className="mt-3 space-y-1 border-t border-black/[0.06] pt-2.5 text-[12px]">
+        <dl className="mt-3 space-y-1 border-t border-white/[0.08] pt-2.5 text-[12px]">
           {[
             ["Trigger", workflow.trigger],
             ["Steps", `${nodes.length}`],
             ["Cost / run", `${usd(costOfSteps(workflow.steps), 3)} USDC`],
           ].map(([k, v]) => (
             <div key={k} className="flex items-baseline gap-2">
-              <dt className="text-neutral-400">{k}</dt>
-              <dd className="tnum ml-auto text-neutral-700">{v}</dd>
+              <dt className="text-haze">{k}</dt>
+              <dd className="tnum ml-auto text-frost">{v}</dd>
             </div>
           ))}
         </dl>
 
-        <h4 className="mt-4 text-[12.5px] font-medium text-neutral-700">Steps</h4>
+        <h4 className="mt-4 text-[12.5px] font-medium text-mist">Steps</h4>
         {nodes.length === 0 ? (
-          <p className="mt-1.5 text-[12.5px] leading-relaxed text-neutral-500">
+          <p className="mt-1.5 text-[12.5px] leading-relaxed text-mist">
             Nothing on the canvas yet. Add a step from the toolbar, or drag an MCP tool in from
             the palette.
           </p>
@@ -1409,11 +1401,11 @@ function PropertiesPanel({
                   <button
                     type="button"
                     onClick={() => onSelect(n.id)}
-                    className="flex w-full items-center gap-2 rounded-lg px-2 py-1.5 text-left transition-colors hover:bg-black/[0.03]"
+                    className="flex w-full items-center gap-2 rounded-lg px-2 py-1.5 text-left transition-colors hover:bg-white/[0.04]"
                   >
-                    <k.Icon size={12} className="shrink-0 text-neutral-400" />
-                    <span className="min-w-0 flex-1 truncate text-[12.5px] text-neutral-700">{n.data.name}</span>
-                    <span className="shrink-0 text-[11px] text-neutral-400">{k.label}</span>
+                    <k.Icon size={12} className="shrink-0 text-haze" />
+                    <span className="min-w-0 flex-1 truncate text-[12.5px] text-frost">{n.data.name}</span>
+                    <span className="shrink-0 text-[11px] text-haze">{k.label}</span>
                   </button>
                 </li>
               );
@@ -1421,20 +1413,20 @@ function PropertiesPanel({
           </ul>
         )}
 
-        <div className="mt-5 flex flex-wrap gap-1.5 border-t border-black/[0.06] pt-3">
+        <div className="mt-5 flex flex-wrap gap-1.5 border-t border-white/[0.08] pt-3">
           <button
             type="button"
             onClick={onClear}
             disabled={locked || nodes.length === 0}
             className={BTN}
           >
-            <Trash2 size={12} className="text-neutral-400" /> Clear canvas
+            <Trash2 size={12} className="text-haze" /> Clear canvas
           </button>
           {onDelete && (
             <button
               type="button"
               onClick={onDelete}
-              className="inline-flex items-center gap-1.5 rounded-lg px-2.5 py-1.5 text-[12.5px] font-medium text-rose-600 transition-colors hover:bg-rose-50"
+              className="inline-flex items-center gap-1.5 rounded-lg px-2.5 py-1.5 text-[12.5px] font-medium text-[#f28b82] transition-colors hover:bg-[#f28b82]/[0.12]"
             >
               <Trash2 size={12} /> Delete workflow
             </button>
@@ -1475,20 +1467,20 @@ function PropertiesPanel({
   return (
     <>
       <div className="flex items-center gap-2">
-        <span className={cn("flex h-6 w-6 shrink-0 items-center justify-center rounded-md", k.chip)}>
+        <span className="flex h-6 w-6 shrink-0 items-center justify-center rounded-md border border-white/[0.08] bg-white/[0.06] text-frost">
           <k.Icon size={13} />
         </span>
-        <h3 className="text-[13px] font-semibold text-neutral-900">{step.type === "mcp" ? "MCP step" : "Step"}</h3>
+        <h3 className="text-[13px] font-semibold text-frost">{step.type === "mcp" ? "MCP step" : "Step"}</h3>
       </div>
 
       {locked && (
-        <p className="mt-2 text-[12px] leading-relaxed text-neutral-400">
+        <p className="mt-2 text-[12px] leading-relaxed text-mist">
           The canvas is locked. Unlock it from the toolbar to edit this step.
         </p>
       )}
 
       <label className="mt-4 block">
-        <span className="text-[12.5px] font-medium text-neutral-700">Name</span>
+        <span className="text-[12.5px] font-medium text-mist">Name</span>
         <input
           value={step.data.name}
           onChange={(e) => onUpdate(step.id, { name: e.target.value })}
@@ -1499,7 +1491,7 @@ function PropertiesPanel({
       </label>
 
       <label className="mt-3 block">
-        <span className="text-[12.5px] font-medium text-neutral-700">Kind</span>
+        <span className="text-[12.5px] font-medium text-mist">Kind</span>
         <select
           value={step.type}
           onChange={(e) => onUpdate(step.id, { kind: e.target.value as StepKind })}
@@ -1517,7 +1509,7 @@ function PropertiesPanel({
       {step.type === "mcp" && (
         <>
           <label className="mt-3 block">
-            <span className="text-[12.5px] font-medium text-neutral-700">Tool</span>
+            <span className="text-[12.5px] font-medium text-mist">Tool</span>
             <select
               value={tool?.id ?? ""}
               onChange={(e) => commitTool(e.target.value)}
@@ -1527,7 +1519,7 @@ function PropertiesPanel({
               {!tool && <option value="">{step.data.tool ?? "No tool"} — not attached</option>}
               {[...catalogue.values()].map((t) => (
                 <option key={t.id} value={t.id}>
-                  {MCP_CATEGORIES[t.category].label} · {t.name}
+                  {MCP_CATEGORIES[t.category].label}, {t.name}
                 </option>
               ))}
             </select>
@@ -1535,28 +1527,28 @@ function PropertiesPanel({
 
           {tool ? (
             <div className="mt-3">
-              <p className="text-[12.5px] leading-relaxed text-neutral-500">{tool.description}</p>
-              <p className="mt-1.5 font-mono text-[11.5px] text-neutral-400">{tool.id}</p>
+              <p className="text-[12.5px] leading-relaxed text-mist">{tool.description}</p>
+              <p className="mt-1.5 font-plex text-[11.5px] text-haze">{tool.id}</p>
               {tool.inputs.length > 0 ? (
-                <dl className="mt-2.5 space-y-1 border-t border-black/[0.06] pt-2.5">
+                <dl className="mt-2.5 space-y-1 border-t border-white/[0.08] pt-2.5">
                   {tool.inputs.map((input) => (
                     <div key={input.name} className="flex items-baseline gap-2 text-[12px]">
-                      <dt className="font-mono text-neutral-700">{input.name}</dt>
-                      <dd className="ml-auto text-neutral-400">
+                      <dt className="font-plex text-frost">{input.name}</dt>
+                      <dd className="ml-auto text-haze">
                         {input.type}
-                        {input.required ? " · required" : ""}
+                        {input.required ? ", required" : ""}
                       </dd>
                     </div>
                   ))}
                 </dl>
               ) : (
-                <p className="mt-2.5 border-t border-black/[0.06] pt-2.5 text-[12px] text-neutral-400">
+                <p className="mt-2.5 border-t border-white/[0.08] pt-2.5 text-[12px] text-haze">
                   Takes no arguments.
                 </p>
               )}
             </div>
           ) : (
-            <p className="mt-3 text-[12.5px] leading-relaxed text-rose-600">
+            <p className="mt-3 text-[12.5px] leading-relaxed text-[#f28b82]">
               The server this tool came from is no longer attached. Pick another tool, or
               reconnect it from the palette.
             </p>
@@ -1566,7 +1558,7 @@ function PropertiesPanel({
 
       {(step.type === "call" || step.type === "mcp") && (
         <label className="mt-3 block">
-          <span className="text-[12.5px] font-medium text-neutral-700">Price (USDC)</span>
+          <span className="text-[12.5px] font-medium text-mist">Price (USDC)</span>
           <input
             value={price}
             onChange={(e) => commitPrice(e.target.value)}
@@ -1576,9 +1568,9 @@ function PropertiesPanel({
             className={cn(FIELD, "tnum mt-1.5")}
           />
           {err ? (
-            <span className="mt-1.5 block text-[12px] text-rose-600">{err}</span>
+            <span className="mt-1.5 block text-[12px] text-[#f28b82]">{err}</span>
           ) : (
-            <span className="mt-1.5 block text-[12px] leading-relaxed text-neutral-400">
+            <span className="mt-1.5 block text-[12px] leading-relaxed text-haze">
               {step.type === "mcp"
                 ? "What this tool charges per call. Free tools leave it at zero."
                 : "Charged per run, quoted back to the caller as HTTP 402."}
@@ -1591,7 +1583,7 @@ function PropertiesPanel({
         <button
           type="button"
           onClick={() => onDeleteStep(step.id)}
-          className="mt-5 inline-flex items-center gap-1.5 rounded-lg px-2.5 py-1.5 text-[13px] font-medium text-rose-600 transition-colors hover:bg-rose-50"
+          className="mt-5 inline-flex items-center gap-1.5 rounded-lg px-2.5 py-1.5 text-[13px] font-medium text-[#f28b82] transition-colors hover:bg-[#f28b82]/[0.12]"
         >
           <Trash2 size={13} /> Delete step
         </button>

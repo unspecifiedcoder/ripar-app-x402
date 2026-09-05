@@ -23,11 +23,11 @@ const fullStamp = (at: number) =>
 
 const secs = (ms: number) => `${(ms / 1000).toFixed(1)}s`;
 
-const EMPTY = "rounded-xl border border-dashed border-black/12 px-4 py-8 text-center";
-const NOTE = "mt-3 border-t border-black/[0.06] pt-2.5 text-[11.5px] leading-relaxed text-neutral-400";
+const EMPTY = "rounded-xl border border-dashed border-white/[0.12] px-4 py-8 text-center";
+const NOTE = "mt-3 border-t border-white/[0.08] pt-2.5 text-[11.5px] leading-relaxed text-haze";
 // px-3 throughout, because that is what SortHeader draws with — a header on a
 // different inset from its own column reads as a misaligned table.
-const TH = "px-3 py-2 text-left font-medium text-neutral-400";
+const TH = "px-3 py-2 text-left font-medium text-haze";
 const TD = "px-3 py-1.5";
 
 type RunField = "at" | "cost";
@@ -46,8 +46,8 @@ export function RunsPanel({ runs }: { runs: WorkflowRun[] }) {
   if (runs.length === 0) {
     return (
       <div className={EMPTY}>
-        <p className="text-[13px] font-medium text-neutral-800">No runs yet</p>
-        <p className="mx-auto mt-1.5 text-[12px] leading-relaxed text-neutral-500">
+        <p className="text-[13px] font-medium text-frost">No runs yet</p>
+        <p className="mx-auto mt-1.5 text-[12px] leading-relaxed text-mist">
           Press Run to walk the chain. Each walk is recorded here with what its steps quote.
         </p>
       </div>
@@ -69,24 +69,24 @@ export function RunsPanel({ runs }: { runs: WorkflowRun[] }) {
           {rows.map((r) => (
             <tr
               key={r.id}
-              title={`${fullStamp(r.at)} · ${r.steps} ${r.steps === 1 ? "step" : "steps"} · ${secs(r.ms)}`}
-              className="border-t border-black/[0.05]"
+              title={`${fullStamp(r.at)}, ${r.steps} ${r.steps === 1 ? "step" : "steps"}, ${secs(r.ms)}`}
+              className="border-t border-white/[0.06]"
             >
-              <td className={cn(TD, "tnum text-neutral-600")}>{when(r.at)}</td>
+              <td className={cn(TD, "tnum text-mist")}>{when(r.at)}</td>
               <td className={TD}>
                 <span className="inline-flex items-center gap-1.5 font-medium">
                   <span
                     className={cn(
                       "h-1.5 w-1.5 shrink-0 rounded-full",
-                      r.outcome === "ok" ? "bg-emerald-500" : "bg-rose-500"
+                      r.outcome === "ok" ? "bg-mint" : "bg-[#f28b82]"
                     )}
                   />
-                  <span className={r.outcome === "ok" ? "text-emerald-700" : "text-rose-700"}>
+                  <span className={r.outcome === "ok" ? "text-mint" : "text-[#f28b82]"}>
                     {r.outcome === "ok" ? "Completed" : "Failed"}
                   </span>
                 </span>
               </td>
-              <td className={cn(TD, "tnum text-right text-neutral-700")}>{usd(r.cost, 3)}</td>
+              <td className={cn(TD, "tnum text-right text-frost")}>{usd(r.cost, 3)}</td>
             </tr>
           ))}
         </tbody>
@@ -108,8 +108,8 @@ export function HistoryPanel({ edits }: { edits: WorkflowEdit[] }) {
   if (edits.length === 0) {
     return (
       <div className={EMPTY}>
-        <p className="text-[13px] font-medium text-neutral-800">Nothing edited yet</p>
-        <p className="mx-auto mt-1.5 text-[12px] leading-relaxed text-neutral-500">
+        <p className="text-[13px] font-medium text-frost">Nothing edited yet</p>
+        <p className="mx-auto mt-1.5 text-[12px] leading-relaxed text-mist">
           Adding, renaming, wiring or deleting a step is logged here, on this device.
         </p>
       </div>
@@ -133,11 +133,11 @@ export function HistoryPanel({ edits }: { edits: WorkflowEdit[] }) {
         </thead>
         <tbody>
           {rows.map((e) => (
-            <tr key={e.id} className="border-t border-black/[0.05] align-top">
-              <td className={cn(TD, "tnum whitespace-nowrap text-neutral-400")} title={fullStamp(e.at)}>
+            <tr key={e.id} className="border-t border-white/[0.06] align-top">
+              <td className={cn(TD, "tnum whitespace-nowrap text-haze")} title={fullStamp(e.at)}>
                 {when(e.at)}
               </td>
-              <td className={cn(TD, "leading-relaxed text-neutral-700")}>{e.text}</td>
+              <td className={cn(TD, "leading-relaxed text-frost")}>{e.text}</td>
             </tr>
           ))}
         </tbody>

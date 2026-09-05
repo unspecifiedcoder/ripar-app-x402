@@ -21,13 +21,13 @@ export function WorkflowRail({
   return (
     <aside
       className={cn(
-        "flex min-h-0 flex-col border-b border-black/[0.07] bg-white md:border-r",
+        "flex min-h-0 flex-col border-b border-white/[0.08] md:border-r",
         stacked ? "md:border-b" : "md:border-b-0"
       )}
     >
       <div className="flex items-baseline gap-2 px-3 pb-1.5 pt-3">
-        <h3 className="text-[12.5px] font-semibold text-neutral-900">Workflows</h3>
-        <span className="tnum text-[11.5px] text-neutral-400">{workflows.length}</span>
+        <h3 className="text-[12.5px] font-semibold text-frost">Workflows</h3>
+        <span className="tnum text-[11.5px] text-haze">{workflows.length}</span>
       </div>
 
       <div
@@ -37,7 +37,7 @@ export function WorkflowRail({
         )}
       >
         {workflows.length <= 1 ? (
-          <p className="px-2 py-2 text-[11.5px] leading-relaxed text-neutral-400">
+          <p className="px-2 py-2 text-[11.5px] leading-relaxed text-mist">
             {workflows.length === 1
               ? "This is the only workflow in the workspace. Start another from a template to switch between them here."
               : "No workflows yet."}
@@ -54,14 +54,16 @@ export function WorkflowRail({
                     aria-current={on ? "true" : undefined}
                     className={cn(
                       "relative block w-full rounded-lg px-2 py-1.5 text-left transition-colors",
-                      on ? "bg-black/[0.055]" : "hover:bg-black/[0.03]"
+                      on ? "bg-white/[0.08]" : "hover:bg-white/[0.04]"
                     )}
                   >
-                    {on && <span className="absolute inset-y-1.5 left-0 w-[2.5px] rounded-full bg-accent" />}
+                    {/* The active bar is frost, not gold — gold means money
+                        (D-002), and this is only "you are here." */}
+                    {on && <span className="absolute inset-y-1.5 left-0 w-[2.5px] rounded-full bg-frost" />}
                     <span
                       className={cn(
                         "block truncate text-[12.5px] font-medium",
-                        on ? "text-neutral-900" : "text-neutral-600"
+                        on ? "text-frost" : "text-mist"
                       )}
                     >
                       {w.name}
@@ -69,10 +71,10 @@ export function WorkflowRail({
                     {/* No status pill: a workflow here is never armed or live,
                         so what the chain costs is the fact worth carrying. */}
                     <span className="mt-0.5 flex items-baseline gap-1.5">
-                      <span className="tnum text-[11px] text-neutral-400">
+                      <span className="tnum text-[11px] text-haze">
                         {w.steps.length} {w.steps.length === 1 ? "step" : "steps"}
                       </span>
-                      <span className="tnum ml-auto text-[11px] text-neutral-400">
+                      <span className="tnum ml-auto text-[11px] text-haze">
                         {usd(costOfSteps(w.steps), 3)} USDC
                       </span>
                     </span>
