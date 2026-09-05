@@ -162,6 +162,11 @@ toast,mark,app-icon,button}.tsx`, `app/dashboard/page.tsx` only if the
 `<main>` landmark must move.
 
 **Spec.**
+- `shortcuts.tsx`: the key list ("o · c · e · w …") becomes a row of `kbd`
+  chips per §2.11 — each key in its own `font-plex text-[10.5px] text-haze
+  border border-white/[0.10] rounded px-1` chip, separated by a 6px gap,
+  no separator character. The middle-dot grep then passes for the right
+  reason.
 - Root ground: remove `bg-[#fafafa]`; inherit ink.
 - Sidebar §2.4: `glass`, 228 wide, items 36 tall (44 on touch — use
   `min-h-11` below `lg`), active `frost` with a 2px `frost` left bar,
@@ -359,9 +364,12 @@ override block. `STEP_KINDS` lose `chip` and `swatch`; nodes are `glass`
 with icon 16 + label `frost` + kind `label` `haze`. `Background` dots
 `white/[0.08]`; `MiniMap` `maskColor rgba(7,10,16,0.7)`, `nodeColor` →
 `#e8edf7` at 40%. Edges `white/[0.22]`; a running edge `mint` with
-`.edge-flow`; an edge whose step settled a payment `gold`. Both canvas
+`.edge-flow`; no gold edge — runs quote and never settle (D-013, amended). Both canvas
 grounds (`bg-[#fbfbfb]` ×2) → ink. The Workflows page head keeps
-`simulated`.
+`simulated`. The middle-dot strings in `workflow-canvas.tsx`,
+`workflows-view.tsx` and `workflow-activity-panels.tsx` (one new, twelve
+pre-existing) are P-08's to fix, since it is already restyling those
+files: facts become separate cells or a sentence (§2.6a).
 
 **Don't.** Add a colour per step kind. Keep any `.rf-canvas` rule.
 

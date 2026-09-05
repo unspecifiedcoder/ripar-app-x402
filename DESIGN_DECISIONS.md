@@ -287,6 +287,14 @@ things; the canvas should not be the exception because a library shipped a
 palette. Icon plus label distinguishes step kinds at least as well and does
 not cost gold its meaning (D-002).
 
+**Amended after pre-flight.** There is no gold edge, and there must not
+be one. `lib/workflow-run.ts` treats the 402 as the success case and says
+so: a workflow run quotes, it never settles, and `RunResult` carries only
+`quotedUsdc`. A gold edge would need a settlement that does not exist,
+which is D-002's exact prohibition. The canvas therefore has one colour,
+mint on a running edge, until the day a run can settle. Implementers must
+not stop at P-08 for the missing gold, and must not invent it.
+
 **Also in scope.** The Job board's six status chips on `origin/main` —
 Disputed (rose), Submitted (violet), Open (sky), Validated (emerald),
 Cancelled (grey), and the escrow figure in green — collapse to the status
