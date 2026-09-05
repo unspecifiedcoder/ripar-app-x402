@@ -523,6 +523,11 @@ not stop; the answer is below.
    packet's to fix.
 
 **P-09 Chat**
+0. The middle-dot tool lines in `lib/chat-intent.ts` (the `call` and
+   `result` strings the thread renders, and the "Paid to this address"
+   value) are this packet's to rewrite as sentences or comma-separated
+   facts. The reply *text* does not change; the punctuation of a status
+   line does.
 1. The composer stays a `<textarea>` (auto-grow to 160px, Shift+Enter for
    a newline); it takes §2.2's styling and `min-h-11`. It is not replaced
    by a single-line input.
