@@ -444,7 +444,9 @@ one `main`, one `header`, one `h1`.
 
 ## P-12 — Director's review
 
-After each packet lands: screenshot at 1440 and 390, compare to this plan,
+Use `docs/P12_REVIEW_RUBRIC.md`: one copy per screen, every row filled with
+GREEN / AMBER / RED and one line of evidence, then the run summary. After
+each packet lands: screenshot at 1440 and 390, compare to this plan,
 check §18 of the brief (embarrassing beside the best? template? one-sentence
 identity? one screenshot-worthy moment? every element earning its place?).
 GREEN continues; anything else stops the chain.

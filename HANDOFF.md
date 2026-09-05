@@ -65,8 +65,9 @@ After P-03 merges, in this order, two at a time at most:
 4. **P-09 Chat.**
 5. **P-10 Login** — replace the mockup with `<Stream readOnly />`. This is
    what turns the deliberate red test green.
-6. **P-12** — the director's review of every surface at 1440 and 390
-   against §18 of the brief.
+6. **P-12** — the director's review of every surface at 1440 and 390,
+   filled in per screen on `docs/P12_REVIEW_RUBRIC.md`. Anything not
+   GREEN stops the chain and names the packet that owns the fix.
 
 Each has a full spec in `DESIGN_PLAN.md`; write the implementer's packet
 from that section plus the `DESIGN_SYSTEM.md` §-references it names.
