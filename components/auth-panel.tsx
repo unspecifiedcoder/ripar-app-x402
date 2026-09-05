@@ -142,14 +142,14 @@ export function AuthPanel() {
       </div>
 
       <div className="mx-auto w-full max-w-sm">
-        <h1 className="text-3xl font-semibold tracking-tight text-neutral-900">Welcome to Ripar</h1>
-        <p className="mt-2 text-[15px] text-neutral-500">The execution layer for Algorand agents</p>
+        <h1 className="text-3xl font-semibold tracking-tight text-frost">Welcome to Ripar</h1>
+        <p className="mt-2 text-[15px] text-mist">The execution layer for Algorand agents</p>
 
         {sent ? (
-          <div className="mt-8 rounded-xl border border-neutral-200 bg-neutral-50 p-5 text-sm text-neutral-700">
-            <p className="font-medium text-neutral-900">Check your inbox</p>
-            <p className="mt-1 text-neutral-500">
-              We sent a magic sign-in link to <span className="font-medium text-neutral-800">{email}</span>.
+          <div className="mt-8 rounded-[10px] border border-white/[0.08] bg-white/[0.06] p-5 text-sm text-frost">
+            <p className="font-medium text-frost">Check your inbox</p>
+            <p className="mt-1 text-mist">
+              We sent a magic sign-in link to <span className="font-medium text-frost">{email}</span>.
             </p>
           </div>
         ) : (
@@ -175,9 +175,9 @@ export function AuthPanel() {
             ) : null}
 
             <div className={cn("flex items-center gap-4", enabled && enabled.size > 0 ? "my-6" : "sr-only")}>
-              <span className="h-px flex-1 bg-neutral-200" />
-              <span className="text-sm text-neutral-400">or</span>
-              <span className="h-px flex-1 bg-neutral-200" />
+              <span className="h-px flex-1 bg-white/[0.10]" />
+              <span className="text-sm text-haze">or</span>
+              <span className="h-px flex-1 bg-white/[0.10]" />
             </div>
 
             <form onSubmit={emailSignIn} className="space-y-3">
@@ -188,12 +188,12 @@ export function AuthPanel() {
                 value={email}
                 onChange={(e) => setEmail(e.target.value)}
                 placeholder="name@company.com"
-                className="w-full rounded-full border border-neutral-200 bg-white px-5 py-3 text-sm text-neutral-900 outline-none transition-colors placeholder:text-neutral-400 focus:border-neutral-400"
+                className="h-9 w-full rounded-[6px] border border-white/[0.08] bg-black/30 px-3 text-sm text-frost outline-none transition-colors placeholder:text-haze focus:border-mint/50"
               />
               <button
                 type="submit"
                 disabled={loading === "email"}
-                className="flex w-full items-center justify-center gap-2 rounded-full bg-neutral-900 py-3 text-sm font-medium text-white transition-colors hover:bg-neutral-800 disabled:opacity-60"
+                className="flex h-10 w-full items-center justify-center gap-2 rounded-[6px] bg-frost text-sm font-medium text-ink transition-colors hover:bg-frost/90 disabled:opacity-40"
               >
                 {loading === "email" && <Loader2 className="h-4 w-4 animate-spin" />}
                 Continue with email
@@ -202,13 +202,13 @@ export function AuthPanel() {
           </>
         )}
 
-        {error && <p className="mt-4 text-sm text-red-500">{error}</p>}
+        {error && <p className="mt-4 text-sm text-[#f28b82]">{error}</p>}
 
-        <p className="mt-8 text-xs leading-relaxed text-neutral-400">
+        <p className="mt-8 text-xs leading-relaxed text-mist">
           By signing in, you agree to the{" "}
-          <button onClick={() => toast("Terms of Use")} className="text-neutral-600 underline underline-offset-2 hover:text-neutral-900">Terms of Use</button>,{" "}
-          <button onClick={() => toast("Fair Usage Policy")} className="text-neutral-600 underline underline-offset-2 hover:text-neutral-900">Fair Usage Policy</button>, and{" "}
-          <button onClick={() => toast("Privacy Notice")} className="text-neutral-600 underline underline-offset-2 hover:text-neutral-900">Privacy Notice</button>.
+          <button onClick={() => toast("Terms of Use")} className="text-mist underline underline-offset-2 hover:text-frost">Terms of Use</button>,{" "}
+          <button onClick={() => toast("Fair Usage Policy")} className="text-mist underline underline-offset-2 hover:text-frost">Fair Usage Policy</button>, and{" "}
+          <button onClick={() => toast("Privacy Notice")} className="text-mist underline underline-offset-2 hover:text-frost">Privacy Notice</button>.
         </p>
       </div>
     </div>
@@ -231,11 +231,13 @@ function OAuthButton({
       type="button"
       onClick={onClick}
       disabled={loading}
-      className={cn(
-        "flex w-full items-center justify-center gap-3 rounded-full border border-neutral-200 bg-white py-3 text-sm font-medium text-neutral-800 transition-colors hover:bg-neutral-50 disabled:opacity-60"
-      )}
+      className="flex h-10 w-full items-center justify-center gap-3 rounded-[6px] border border-white/[0.10] bg-white/[0.08] text-sm font-medium text-frost transition-colors hover:bg-white/[0.12] disabled:opacity-40"
     >
-      {loading ? <Loader2 className="h-[18px] w-[18px] animate-spin text-neutral-400" /> : icon}
+      {loading ? (
+        <Loader2 className="h-[18px] w-[18px] animate-spin text-haze" />
+      ) : (
+        <span className="flex h-6 w-6 items-center justify-center rounded-[6px] bg-frost">{icon}</span>
+      )}
       {children}
     </button>
   );
