@@ -1,12 +1,13 @@
 "use client";
 
 import { useState } from "react";
-import { Check, Copy, ExternalLink, Rocket } from "lucide-react";
+import { ExternalLink, Rocket } from "lucide-react";
 import { SlideOver } from "@/components/ui/slide-over";
 import { MANIFEST_PATH } from "@/lib/agent-origin";
 import type { DeployEndpoint } from "@/lib/deploy-targets";
 import { AGENT_ORIGIN, useWorkspace, type RealEndpoint } from "@/lib/real-data";
-import { EmptyState, Metric, PageHead, Sheet, StatusPill } from "./bits";
+import { CodeBlock, EmptyState, Metric, PageHead, Sheet, StatusPill } from "./bits";
+import { Table, Td, Th, Tr } from "./table";
 import { DeployModal } from "./deploy-modal";
 
 const usd = (n: number, d = 2) =>
@@ -36,12 +37,13 @@ export function EndpointsView() {
             ? `Read live from ${data.manifest.handle}'s published manifest. An unpaid call to any of these returns a real 402 carrying a USDC quote.`
             : "Read live from your deployed agent's published manifest."
         }
+        network={data?.chain.network}
         actions={
           <a
             href={`${AGENT_ORIGIN}${MANIFEST_PATH}`}
             target="_blank"
             rel="noreferrer"
-            className="inline-flex items-center gap-1.5 rounded-lg border border-black/10 bg-white px-3 py-1.5 text-[13px] font-medium text-neutral-700 transition-colors hover:border-black/20"
+            className="inline-flex items-center gap-1.5 rounded-lg border border-white/[0.10] px-3 py-1.5 text-[13px] font-medium text-mist transition-colors hover:border-white/[0.18] hover:text-frost"
           >
             View manifest <ExternalLink size={13} />
           </a>
@@ -50,7 +52,7 @@ export function EndpointsView() {
 
       {status === "loading" ? (
         <Sheet>
-          <p className="px-4 py-12 text-center text-[13px] text-neutral-400">
+          <p className="px-4 py-12 text-center text-[13px] text-mist">
             reading {AGENT_ORIGIN.replace("https://", "")}…
           </p>
         </Sheet>
@@ -61,18 +63,24 @@ export function EndpointsView() {
         />
       ) : (
         <>
-          <div className="mb-4 grid grid-cols-2 gap-px overflow-hidden rounded-xl bg-black/[0.07] sm:grid-cols-4">
-            <div className="bg-white px-4 py-4">
+          <div className="mb-4 grid grid-cols-2 gap-px overflow-hidden rounded-xl bg-white/[0.06] sm:grid-cols-4">
+            <div className="bg-ink px-4 py-4">
               <Metric label="Agent" value={data.manifest.handle} hint={AGENT_ORIGIN.replace("https://", "")} />
             </div>
-            <div className="bg-white px-4 py-4">
+            <div className="bg-ink px-4 py-4">
               <Metric label="Endpoints live" value={String(endpoints.length)} />
             </div>
-            <div className="bg-white px-4 py-4">
+            <div className="bg-ink px-4 py-4">
               <Metric label="Paid calls received" value={String(data.mine.calls)} hint="across every endpoint" />
             </div>
-            <div className="bg-white px-4 py-4">
-              <Metric label="Earned" value={usd(data.mine.earnedUsdc)} unit="USDC" hint="across every endpoint" />
+            <div className="bg-ink px-4 py-4">
+              <Metric
+                label="Earned"
+                value={usd(data.mine.earnedUsdc)}
+                unit="USDC"
+                hint="across every endpoint"
+                tone={data.mine.earnedUsdc > 0 ? "settled" : undefined}
+              />
             </div>
           </div>
 
@@ -80,40 +88,40 @@ export function EndpointsView() {
               address it paid, not the route that earned it, so the only honest
               place for those figures is the agent-wide row above. */}
           <Sheet>
-            <div className="overflow-x-auto">
-              <table className="w-full min-w-[620px] text-[13.5px]">
-                <thead className="border-b border-black/[0.07] text-[12px] text-neutral-400">
-                  <tr>
-                    <th scope="col" className="px-3 py-2 text-left font-medium">Endpoint</th>
-                    <th scope="col" className="px-3 py-2 text-left font-medium">Status</th>
-                    <th scope="col" className="px-3 py-2 text-left font-medium">Method</th>
-                    <th scope="col" className="px-3 py-2 text-right font-medium">Price</th>
-                  </tr>
-                </thead>
-                <tbody>
-                  {endpoints.map((e) => (
-                    <tr
-                      key={e.name}
-                      onClick={() => setOpen(e)}
-                      className="cursor-pointer border-b border-black/[0.05] last:border-0 hover:bg-black/[0.02]"
-                    >
-                      <td className="px-3 py-2.5">
-                        <span className="block font-medium text-neutral-900">{e.name}</span>
-                        <span className="block truncate font-mono text-[11.5px] text-neutral-400">
-                          {e.path}
-                        </span>
-                      </td>
-                      <td className="px-3 py-2.5"><StatusPill status="live" /></td>
-                      <td className="px-3 py-2.5 font-mono text-[12px] text-neutral-500">{e.method}</td>
-                      <td className="tnum px-3 py-2.5 text-right">{e.price}</td>
-                    </tr>
-                  ))}
-                </tbody>
-              </table>
-            </div>
+            <Table<RealEndpoint>
+              minWidth={620}
+              rows={endpoints}
+              list={(e) => ({
+                primary: e.name,
+                amount: e.price,
+                secondary: `${e.path}, ${e.method}`,
+              })}
+            >
+              <thead>
+                <tr>
+                  <Th>Endpoint</Th>
+                  <Th>Status</Th>
+                  <Th>Method</Th>
+                  <Th align="right">Price</Th>
+                </tr>
+              </thead>
+              <tbody>
+                {endpoints.map((e) => (
+                  <Tr key={e.name} className="cursor-pointer" onClick={() => setOpen(e)}>
+                    <Td>
+                      <span className="block text-frost">{e.name}</span>
+                      <span className="block truncate font-plex text-[11.5px] text-mist">{e.path}</span>
+                    </Td>
+                    <Td><StatusPill status="live" /></Td>
+                    <Td kind="mono">{e.method}</Td>
+                    <Td kind="mono" align="right">{e.price}</Td>
+                  </Tr>
+                ))}
+              </tbody>
+            </Table>
           </Sheet>
 
-          <p className="mt-2.5 text-[12px] leading-relaxed text-neutral-400">
+          <p className="mt-2.5 text-[12px] leading-relaxed text-mist">
             Paid calls and earnings are counted per agent, not per endpoint: an x402 settlement is a
             USDC transfer to the payout address, and the transfer does not carry the name of the route
             that was called. A per-endpoint figure would be a guess, so there is not one here.
@@ -122,7 +130,7 @@ export function EndpointsView() {
                 {" "}
                 Nothing has been paid yet, and it stays at zero until somebody actually pays — try it
                 yourself with{" "}
-                <code className="rounded bg-black/[0.04] px-1 py-px font-mono text-[11.5px]">
+                <code className="rounded bg-white/[0.06] px-1 py-px font-plex text-[11.5px] text-frost">
                   curl -X POST {AGENT_ORIGIN}
                   {sample.path} -d &apos;&#123;&quot;text&quot;:&quot;…&quot;&#125;&apos;
                 </code>
@@ -158,29 +166,18 @@ const deployShape = (e: RealEndpoint): DeployEndpoint => ({
 });
 
 function Detail({ e, onDeploy }: { e: RealEndpoint; onDeploy: () => void }) {
-  const [copied, setCopied] = useState(false);
   const snippet = `curl -X POST ${e.url} \\\n  -H 'content-type: application/json' \\\n  -d '{"text":"…"}'`;
-
-  async function copy() {
-    try {
-      await navigator.clipboard.writeText(snippet);
-      setCopied(true);
-      setTimeout(() => setCopied(false), 1500);
-    } catch {
-      /* clipboard blocked — the snippet is on screen to select */
-    }
-  }
 
   return (
     <div className="space-y-7">
       <div>
         <StatusPill status="live" />
-        {e.description && <p className="mt-3 text-[13.5px] leading-relaxed text-neutral-600">{e.description}</p>}
+        {e.description && <p className="mt-3 text-[13.5px] leading-relaxed text-mist">{e.description}</p>}
         <a
           href={e.url}
           target="_blank"
           rel="noreferrer"
-          className="mt-2 inline-flex items-center gap-1 break-all font-mono text-[12px] text-neutral-500 hover:text-accent"
+          className="mt-2 inline-flex items-center gap-1 break-all font-plex text-[12px] text-mist hover:text-frost"
         >
           {e.url} <ExternalLink size={11} />
         </a>
@@ -189,34 +186,27 @@ function Detail({ e, onDeploy }: { e: RealEndpoint; onDeploy: () => void }) {
       {/* Price and method are what the manifest states about this route. What it
           has earned is not here because it is not knowable per route — see the
           note under the table. */}
-      <div className="grid grid-cols-2 gap-5 border-t border-black/[0.07] pt-5">
+      <div className="grid grid-cols-2 gap-5 border-t border-white/[0.08] pt-5">
         <Metric label="Price" value={e.price} unit="per request" />
         <Metric label="Method" value={e.method} />
       </div>
 
-      <div className="border-t border-black/[0.07] pt-5">
-        <div className="flex items-center justify-between">
-          <h3 className="text-[13px] font-semibold text-neutral-900">Call it</h3>
-          <button
-            type="button"
-            onClick={copy}
-            className="inline-flex items-center gap-1.5 rounded-md border border-black/10 px-2 py-1 text-[12px] text-neutral-500 transition-colors hover:text-neutral-900"
-          >
-            {copied ? <Check size={12} className="text-emerald-600" /> : <Copy size={12} />}
-            {copied ? "Copied" : "Copy"}
-          </button>
-        </div>
-        <pre className="mt-2.5 overflow-x-auto rounded-lg border border-black/[0.07] bg-neutral-50 p-3 font-mono text-[12px] leading-relaxed text-neutral-700">
-{snippet}
-        </pre>
-        <p className="mt-2 text-[12.5px] leading-relaxed text-neutral-500">
-          Unpaid, that returns a real <span className="font-mono">402</span> with a USDC quote. This
-          is not a simulation — the endpoint is public.
-        </p>
+      <div className="border-t border-white/[0.08] pt-5">
+        <h3 className="mb-2.5 text-[13px] font-semibold text-frost">Call it</h3>
+        <CodeBlock
+          title="Request"
+          body={snippet}
+          note={
+            <>
+              Unpaid, that returns a real <span className="font-plex">402</span> with a USDC quote. This
+              is not a simulation, the endpoint is public.
+            </>
+          }
+        />
       </div>
 
-      <div className="flex gap-2 border-t border-black/[0.07] pt-5">
-        <button type="button" onClick={onDeploy} className="inline-flex items-center gap-1.5 rounded-lg bg-neutral-900 px-3 py-1.5 text-[13px] font-medium text-white hover:bg-neutral-800">
+      <div className="flex gap-2 border-t border-white/[0.08] pt-5">
+        <button type="button" onClick={onDeploy} className="inline-flex items-center gap-1.5 rounded-lg bg-frost px-3 py-1.5 text-[13px] font-medium text-ink hover:bg-frost/90">
           <Rocket size={13} /> Deploy another
         </button>
       </div>

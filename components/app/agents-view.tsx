@@ -6,6 +6,7 @@ import { SlideOver } from "@/components/ui/slide-over";
 import { ago, shortAddr, useWorkspace, type RealAgent } from "@/lib/real-data";
 import { accountUrl, networkLabel } from "@/lib/explorer";
 import { EmptyState, Metric, PageHead, SearchInput, Segmented, Sheet, SortHeader } from "./bits";
+import { Table, Td, Th, Tr } from "./table";
 
 type Scope = "all" | "mine";
 type Field = "address" | "calls" | "earnedUsdc" | "payers" | "medianUsdc";
@@ -64,7 +65,8 @@ export function AgentsView() {
     <>
       <PageHead
         title="Agents"
-        subtitle={`Every address here has actually been paid over x402 on Algorand ${net}. There is no registry to read, so an agent is defined by what it has earned rather than by what it claims.`}
+        subtitle={`Every address here has actually been paid over x402 on Algorand ${net}. An agent with one payer and many calls is usually one operator testing; many distinct payers is the signal worth watching.`}
+        network={data?.chain.network}
       />
 
       <div className="flex flex-wrap items-center gap-3 pb-4">
@@ -77,14 +79,14 @@ export function AgentsView() {
           ]}
         />
         <SearchInput value={q} onChange={setQ} placeholder="Search by address…" className="w-full sm:w-[300px]" />
-        <span className="tnum ml-auto text-[12.5px] text-neutral-400">
+        <span className="tnum ml-auto text-[12.5px] text-mist">
           {rows.length} of {counts.all}
         </span>
       </div>
 
       {status === "loading" ? (
         <Sheet>
-          <p className="px-4 py-12 text-center text-[13px] text-neutral-400">reading the chain…</p>
+          <p className="px-4 py-12 text-center text-[13px] text-mist">reading the chain…</p>
         </Sheet>
       ) : status === "error" ? (
         <EmptyState
@@ -104,59 +106,58 @@ export function AgentsView() {
         />
       ) : (
         <Sheet>
-          <div className="overflow-x-auto">
-            <table className="w-full min-w-[860px] text-[13.5px]">
-              <thead className="border-b border-black/[0.07] text-[12px]">
-                <tr>
-                  <SortHeader label="Agent address" field="address" sort={sort} onSort={toggleSort} />
-                  <SortHeader label="Paid calls" field="calls" sort={sort} onSort={toggleSort} align="right" />
-                  <SortHeader label="Distinct payers" field="payers" sort={sort} onSort={toggleSort} align="right" />
-                  <SortHeader label="Median call" field="medianUsdc" sort={sort} onSort={toggleSort} align="right" />
-                  <SortHeader label="Earned" field="earnedUsdc" sort={sort} onSort={toggleSort} align="right" />
-                  <th scope="col" className="px-3 py-2 text-right font-medium text-neutral-400">Last paid</th>
-                </tr>
-              </thead>
-              <tbody>
-                {rows.map((a) => (
-                  <tr
-                    key={a.address}
-                    onClick={() => setOpen(a)}
-                    className="group cursor-pointer border-b border-black/[0.05] transition-colors last:border-0 hover:bg-black/[0.02]"
-                  >
-                    <td className="px-3 py-2.5">
-                      <div className="flex items-center gap-2.5">
-                        <span className="flex h-7 w-7 shrink-0 items-center justify-center rounded-lg bg-black/[0.05] text-neutral-500">
-                          <Bot size={14} />
+          <Table<RealAgent>
+            minWidth={860}
+            rows={rows}
+            list={(a) => ({
+              primary: shortAddr(a.address, 10, 6),
+              amount: usd(a.earnedUsdc),
+              settled: a.earnedUsdc > 0,
+              secondary: `${a.calls} ${a.calls === 1 ? "call" : "calls"}, ${a.payers} ${a.payers === 1 ? "payer" : "payers"}, ${ago(a.lastSeen)}`,
+            })}
+          >
+            <thead>
+              <tr>
+                <SortHeader label="Agent address" field="address" sort={sort} onSort={toggleSort} />
+                <SortHeader label="Paid calls" field="calls" sort={sort} onSort={toggleSort} align="right" />
+                <SortHeader label="Distinct payers" field="payers" sort={sort} onSort={toggleSort} align="right" />
+                <SortHeader label="Median call" field="medianUsdc" sort={sort} onSort={toggleSort} align="right" />
+                <SortHeader label="Earned" field="earnedUsdc" sort={sort} onSort={toggleSort} align="right" />
+                <Th align="right">Last paid</Th>
+              </tr>
+            </thead>
+            <tbody>
+              {rows.map((a) => (
+                <Tr key={a.address} className="cursor-pointer" onClick={() => setOpen(a)}>
+                  <Td kind="mono" className="text-frost">
+                    <div className="flex items-center gap-2.5">
+                      <span className="flex h-7 w-7 shrink-0 items-center justify-center rounded-lg bg-white/[0.06] text-mist">
+                        <Bot size={14} />
+                      </span>
+                      <span>{shortAddr(a.address, 10, 6)}</span>
+                      {a.mine && (
+                        <span className="rounded-md bg-gold/[0.12] px-1.5 py-0.5 text-[10.5px] font-semibold text-gold">
+                          Mine
                         </span>
-                        <span className="font-mono text-[12.5px] text-neutral-800">{shortAddr(a.address, 10, 6)}</span>
-                        {a.mine && (
-                          <span className="rounded-md bg-orange-50 px-1.5 py-0.5 text-[10.5px] font-semibold text-accent">
-                            Mine
-                          </span>
-                        )}
-                      </div>
-                    </td>
-                    <td className="tnum px-3 py-2.5 text-right">{a.calls}</td>
-                    <td className="tnum px-3 py-2.5 text-right text-neutral-600">{a.payers}</td>
-                    <td className="tnum px-3 py-2.5 text-right text-neutral-600">{usd(a.medianUsdc, 3)}</td>
-                    <td className="tnum px-3 py-2.5 text-right font-medium">{usd(a.earnedUsdc)}</td>
-                    <td className="px-3 py-2.5 text-right text-neutral-500">{ago(a.lastSeen)}</td>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
-          </div>
+                      )}
+                    </div>
+                  </Td>
+                  <Td kind="mono" align="right">{a.calls}</Td>
+                  <Td kind="mono" align="right">{a.payers}</Td>
+                  <Td kind="mono" align="right">{usd(a.medianUsdc, 3)}</Td>
+                  <Td kind={a.earnedUsdc > 0 ? "settled" : "amount"}>{usd(a.earnedUsdc)}</Td>
+                  <Td kind="mist" align="right">{ago(a.lastSeen)}</Td>
+                </Tr>
+              ))}
+            </tbody>
+          </Table>
         </Sheet>
       )}
 
-      <p className="mt-2.5 text-[12px] text-neutral-400">
-        {`Derived from x402 settlements on Algorand ${net}. An agent with one payer and many calls is`}{" "}
-        usually one operator testing; many distinct payers is the signal worth watching.
-      </p>
-      <p className="mt-1.5 text-[12px] leading-relaxed text-neutral-400">
-        <span className="font-medium text-neutral-500">This is settlement, not registration.</span> Every row
+      <p className="mt-1.5 text-[12px] leading-relaxed text-mist">
+        <span className="font-medium text-frost">This is settlement, not registration.</span> Every row
         is an address observed being paid — it carries no id, no domain and no owner, because the chain does
-        not record those against a payment. <span className="font-medium text-neutral-500">Directory</span>{" "}
+        not record those against a payment. <span className="font-medium text-frost">Directory</span>{" "}
         reads the other side: agents that registered an id and a domain in the Identity Registry, whether or
         not anyone has ever paid them. An agent can appear in one and not the other.
       </p>
@@ -165,27 +166,27 @@ export function AgentsView() {
         {open && (
           <div className="space-y-7">
             <div>
-              <p className="break-all font-mono text-[12.5px] text-neutral-700">{open.address}</p>
+              <p className="break-all font-plex text-[12.5px] text-mist">{open.address}</p>
               <a
                 href={accountUrl(open.address, data?.chain.network ?? "testnet")}
                 target="_blank"
                 rel="noreferrer"
-                className="mt-2 inline-flex items-center gap-1 text-[12.5px] text-neutral-500 underline underline-offset-2 hover:text-accent"
+                className="mt-2 inline-flex items-center gap-1 text-[12.5px] text-mist underline underline-offset-2 hover:text-frost"
               >
                 View on the block explorer <ExternalLink size={11} />
               </a>
             </div>
 
-            <div className="grid grid-cols-2 gap-5 border-t border-black/[0.07] pt-5">
+            <div className="grid grid-cols-2 gap-5 border-t border-white/[0.08] pt-5">
               <Metric label="Paid calls" value={String(open.calls)} hint="settlements received" />
               <Metric label="Distinct payers" value={String(open.payers)} />
-              <Metric label="Earned" value={usd(open.earnedUsdc)} unit="USDC" />
+              <Metric label="Earned" value={usd(open.earnedUsdc)} unit="USDC" tone={open.earnedUsdc > 0 ? "settled" : undefined} />
               <Metric label="Median call" value={usd(open.medianUsdc, 3)} unit="USDC" hint="a proxy for list price" />
             </div>
 
-            <div className="border-t border-black/[0.07] pt-5">
-              <h3 className="text-[13px] font-semibold text-neutral-900">What this is, exactly</h3>
-              <p className="mt-1.5 text-[13px] leading-relaxed text-neutral-500">
+            <div className="border-t border-white/[0.08] pt-5">
+              <h3 className="text-[13px] font-semibold text-frost">What this is, exactly</h3>
+              <p className="mt-1.5 text-[13px] leading-relaxed text-mist">
                 An address observed receiving x402 payments in the recent window. We do not know its
                 name, its endpoints or its owner — the chain does not carry that. What we do know is
                 that {open.payers} distinct {open.payers === 1 ? "party has" : "parties have"} paid it{" "}
