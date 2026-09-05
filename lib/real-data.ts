@@ -58,6 +58,13 @@ const CHAIN: Record<ChainNetwork, { algod: string; indexer: string; usdc: number
 /** Re-exported so the views keep one import for the workspace's data. */
 export { AGENT_ORIGIN };
 
+/** The indexer's hostname for the given network, e.g.
+ *  "testnet-idx.algonode.cloud" — for `ErrorPanel`'s "could not read
+ *  settlements from {host}" (§2.15), so the error names where it looked. */
+export function indexerHost(net: ChainNetwork): string {
+  return new URL(CHAIN[net].indexer).hostname;
+}
+
 export type Loadable<T> = {
   data: T | null;
   status: "loading" | "ready" | "error";

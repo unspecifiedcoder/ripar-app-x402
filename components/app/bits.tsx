@@ -31,6 +31,16 @@ export function Testnet({ className }: { className?: string }) {
   );
 }
 
+/** §2.8 — an endpoint serving now. Mint dot + word, no fill, no border. */
+export function Live() {
+  return (
+    <span className="inline-flex items-center gap-1.5 text-[11px] text-mint">
+      <span className="h-1.5 w-1.5 rounded-full bg-mint" />
+      Live
+    </span>
+  );
+}
+
 /** §2.8 — generated in this browser, touched no chain. The loudest badge, on purpose. */
 export function Simulated({ className }: { className?: string }) {
   return (
