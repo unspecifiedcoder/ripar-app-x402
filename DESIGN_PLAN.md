@@ -450,3 +450,94 @@ each packet lands: screenshot at 1440 and 390, compare to this plan,
 check §18 of the brief (embarrassing beside the best? template? one-sentence
 identity? one screenshot-worthy moment? every element earning its place?).
 GREEN continues; anything else stops the chain.
+
+---
+
+## Decisions from the read-only pre-flight (binding; supersede packet text where they differ)
+
+A review of P-05 through P-10 against the tree they will start from found
+the places where a spec contradicts the code or would force an implementer
+to invent. Each is decided here. An implementer who hits one of these must
+not stop; the answer is below.
+
+**Cross-cutting**
+- `Td` gains `className?: string` (an additive change to the P-02
+  primitive; whichever packet first needs it makes it). `kind="mono"` is
+  `mist`; an address or domain that is the row's identity is
+  `<Td kind="mono" className="text-frost">`.
+- `kind="settled"` and `tone="settled"` are used only when the figure is
+  greater than zero; otherwise `amount` / default. Stated once in §2.7.
+- The claims guard's vocabulary, so new copy avoids it:
+  `guarantee|verified|authentic|immutable|certified|attested|trusted|compliant|real|actually`.
+  Nothing new is allowlisted.
+- Middle-dot strings that are key lists or tool lines are rewritten, not
+  exempted: `shortcuts.tsx` → kbd chips (P-03); `chat-view.tsx:45`
+  `"indexer · settled USDC transfers"` → `"indexer, settled USDC
+  transfers"` (P-09).
+- The two pre-existing eslint errors (`chat-view.tsx:92`, `shell.tsx:72`)
+  are left alone and not counted.
+
+**P-05 Overview**
+1. "Ship an endpoint" calls `onAsk("")`: it opens Chat with nothing seeded
+   and nothing auto-sent. No prompt is invented.
+2. Chain status in the stream header: "Round 66,982,883, 2.7s between
+   blocks" — a sentence, per §2.6a.
+3. A `Live` badge is added to `bits.tsx` in this packet: mint 6px dot +
+   "Live" in `text-mint text-[11px]`, no fill, no border.
+4. `lib/real-data.ts` exports `indexerHost(net)`; `ErrorPanel` gets
+   `host={indexerHost(net)}` and `message={error}`.
+5. `fetchSettlements` caps at 40, so "Load 20 more" appears once and then
+   disappears. That is correct; do not raise the cap.
+
+**P-06 Agents, Endpoints, Receipts**
+1. Endpoints gets NO per-endpoint calls or earned columns. A payment names
+   an address, never an endpoint; per-endpoint figures would fabricate
+   attribution. The agent-wide Metrics stay, `tone="settled"` on Earned
+   when > 0.
+2. Receipts keeps its Round (`mono`, right) and Age (`mist`, right)
+   columns between paid-to and amount. Nothing is removed or reordered.
+3. Receipts' local `txUrl` is replaced by `lib/explorer.ts`. On MainNet
+   that moves "verify" from lora to allo.info. That is intended.
+
+**P-07 Directory, Job board, Register**
+1. Directory: "Settled" is `volumeMicro`, an amount, via `unitsFmt`, gold
+   when > 0. "Jobs paid" is the count, `mono`. There is no separate
+   settlement count.
+2. `STATUS_TONE` in `lib/app-data.ts` is extended with the job statuses and
+   `StatusPill`'s type widened: validated `mint`; open `frost`; submitted
+   `gold/70`; assigned `frost`; cancelled `haze`; unknown `haze`; disputed
+   error.
+3. Each job is a `Tr`. Its `ActionRow` — the sender / agent-id / result-hash
+   / amount inputs, the build button and the verdict button — moves into an
+   expandable second `Tr` (`colSpan` across the table) directly beneath,
+   opened by clicking the job row; the inputs and what they build are
+   untouched. The verdict button is §2.1 danger (`#f28b82`), not rose.
+4. `UnsignedCall` opens in a `SlideOver` when compose returns a call,
+   replacing the inline panel; `ComposeRefused` stays inline.
+5. Register's disabled primary shows, as its tooltip, the first failing
+   precondition in the order the code checks them.
+6. Pera and Lora links for app and asset ids stay exactly as they are;
+   `lib/explorer.ts` has no builders for them and gains none.
+7. The middle-dot and uppercase strings in `board-view.tsx` and
+   `unsigned-txn.tsx`, and their off-palette tone classes, are this
+   packet's to fix.
+
+**P-09 Chat**
+1. The composer stays a `<textarea>` (auto-grow to 160px, Shift+Enter for
+   a newline); it takes §2.2's styling and `min-h-11`. It is not replaced
+   by a single-line input.
+2. The hint reads "Enter to send, Shift+Enter for a new line".
+3. The typing caret is `mint`.
+
+**P-10 Login**
+1. `components/dashboard-preview.tsx` is NOT deleted — `claims.test.ts`
+   asserts the path is in its scanned set. The file's content becomes the
+   stream panel; the mockup and the bidding line go.
+2. The caption under the stream is the card's existing sentence, which
+   already passes the claims guard: "A caller with no account gets a 402
+   carrying your price, attaches USDC and retries. Settlement lands in your
+   own Algorand address — Ripar never holds it."
+3. `components/brand-logos.tsx` is exempt from the colour rule (D-016);
+   the logos sit on a `frost` chip.
+4. On phone the order is form, then stream beneath; the stream is no
+   longer `hidden` below `lg`.

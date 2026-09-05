@@ -313,8 +313,12 @@ The workhorse. The mission settlements panel is the reference.
 - Rows: 36px, `table` size, dividers per §1.5. Hover `glass-raised`.
 - Text columns `frost`; secondary text columns `mist`; evidence columns
   `mono`.
-- Amounts right-aligned, `mono`, `tnum`. MainNet USDC that moved: `gold`.
-  Everything else: `frost`.
+- Amounts right-aligned, `mono`, `tnum`. A settled figure is `gold` only
+  when it is greater than zero: `kind={n > 0 ? "settled" : "amount"}`. A
+  zero is a reading, not a payment, and it is `frost`.
+- `Td` accepts `className` so a `mono` cell can be `frost` where the value
+  is the row's identity (an address or a domain); `kind="mono"` alone is
+  `mist`.
 - Addresses: `shortAddr` (6…4), `mono`, `mist`, full address in `title=`.
   Clicking copies; the value flashes `mint` (§1.7 success).
 - The proof column is always last and always says `verify ↗` as a ghost
