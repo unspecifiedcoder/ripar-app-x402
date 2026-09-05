@@ -84,13 +84,27 @@ export const CLAIMS_ALLOWLIST: ClaimEntry[] = [
       "The endpoint is public and its manifest is read live (lib/real-data.ts).",
   },
   {
-    file: "components/app/overview-view.tsx",
+    // P-05: this empty-state copy moved from overview-view.tsx into the
+    // extracted Stream component it now shares with a future read-only
+    // caller (P-10) — same text, new home.
+    file: "components/app/stream.tsx",
     phrase:
       "This is a young protocol and quiet stretches are normal. Rows appear here when payments actually happen — none are invented to fill the gap.",
     evidence:
       "Same lib/real-data.ts / useWorkspace() read as Agents and Endpoints — " +
       "this table has no generated-data fallback, so an empty window is empty " +
       "because the chain read found nothing, not because rows were omitted.",
+  },
+  {
+    // P-05: the Overview's "Your endpoints" panel reuses Endpoints' own
+    // empty-state sentence verbatim for the same no-manifest condition.
+    file: "components/app/overview-view.tsx",
+    phrase:
+      ". Deploy an agent with the Ripar SDK and this fills in from its own manifest — nothing is listed here that is not actually serving.`",
+    evidence:
+      "The empty-state copy for when no manifest can be read — the panel is " +
+      "populated exclusively from data.manifest (a live fetch through AGENT_ORIGIN), " +
+      "so there is no path that puts an unserved route on the page.",
   },
   {
     file: "components/app/receipts-view.tsx",
