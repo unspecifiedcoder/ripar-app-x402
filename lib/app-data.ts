@@ -17,6 +17,8 @@
 // the `usd`/`compact`/`costOfSteps` helpers, and WORKFLOWS — starter templates
 // the builder offers, which state plainly that they have never run.
 
+import type { JobStatusName } from "./registry-chain";
+
 export type Status = "live" | "paused" | "draft" | "error";
 export type AgentStatus = "idle" | "working" | "bidding" | "offline";
 
@@ -132,13 +134,21 @@ export const WORKFLOWS: Workflow[] = [
 // `usd` and `compact` moved to lib/format.ts (P-02); every importer of them
 // now reads `@/lib/format` directly.
 
-export const STATUS_TONE: Record<Status | AgentStatus, { dot: string; text: string; label: string }> = {
-  live:    { dot: "bg-mint",      text: "text-mint",      label: "Live" },
-  working: { dot: "bg-mint",      text: "text-mint",      label: "Working" },
-  bidding: { dot: "bg-gold/60",   text: "text-gold/70",   label: "Bidding" },
-  paused:  { dot: "bg-haze",      text: "text-haze",      label: "Paused" },
-  idle:    { dot: "bg-mist",      text: "text-mist",      label: "Idle" },
-  draft:   { dot: "bg-haze",      text: "text-haze",      label: "Draft" },
-  offline: { dot: "bg-haze",      text: "text-haze",      label: "Offline" },
-  error:   { dot: "bg-[#f28b82]", text: "text-[#f28b82]", label: "Error" },
+export const STATUS_TONE: Record<Status | AgentStatus | JobStatusName, { dot: string; text: string; label: string }> = {
+  live:      { dot: "bg-mint",      text: "text-mint",      label: "Live" },
+  working:   { dot: "bg-mint",      text: "text-mint",      label: "Working" },
+  bidding:   { dot: "bg-gold/60",   text: "text-gold/70",   label: "Bidding" },
+  paused:    { dot: "bg-haze",      text: "text-haze",      label: "Paused" },
+  idle:      { dot: "bg-mist",      text: "text-mist",      label: "Idle" },
+  draft:     { dot: "bg-haze",      text: "text-haze",      label: "Draft" },
+  offline:   { dot: "bg-haze",      text: "text-haze",      label: "Offline" },
+  error:     { dot: "bg-[#f28b82]", text: "text-[#f28b82]", label: "Error" },
+  // Job-board statuses (D-013, widened per the P-07 pre-flight decision).
+  validated: { dot: "bg-mint",      text: "text-mint",      label: "Validated" },
+  open:      { dot: "bg-frost",     text: "text-frost",     label: "Open" },
+  submitted: { dot: "bg-gold/60",   text: "text-gold/70",   label: "Submitted" },
+  assigned:  { dot: "bg-frost",     text: "text-frost",     label: "Assigned" },
+  cancelled: { dot: "bg-haze",      text: "text-haze",      label: "Cancelled" },
+  unknown:   { dot: "bg-haze",      text: "text-haze",      label: "Unknown" },
+  disputed:  { dot: "bg-[#f28b82]", text: "text-[#f28b82]", label: "Disputed" },
 };
