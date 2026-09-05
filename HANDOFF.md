@@ -114,3 +114,32 @@ Reference captures of `origin/main` before any of this, for comparison,
 are described in `DESIGN_DECISIONS.md` (the login mockup, the light
 overview, the mission screen). The mission screen on this branch must
 match its previous self at 1440 except for label case.
+
+## Three things a fresh session gets wrong unless told
+
+**Commit identity.** Every commit on this branch is authored
+`Ravi Shankar Bejini <ravishankarbejini@gmail.com>`. That was set per
+commit with `-c`, not in config, so a new environment will commit as
+whatever its integration provides. Set it once, repo-local, before the
+first commit:
+
+```
+git config user.name  "Ravi Shankar Bejini"
+git config user.email "ravishankarbejini@gmail.com"
+```
+
+**Screenshots.** Use Playwright with its bundled Chromium
+(`npx playwright install chromium` first), not an ad-hoc headless
+launch. Desktop: viewport 1440×900, deviceScaleFactor 1. Phone: viewport
+390×844, deviceScaleFactor 2, `isMobile: true`, `hasTouch: true`. Wait
+at least 4500 ms after navigation on /mission and 8000 ms on /dashboard
+(the indexer read takes ~5 s) before capturing. For the reduced-motion
+check use `page.emulateMedia({ reducedMotion: "reduce" })` and evaluate
+`document.getAnimations().length` after 3 s. Captures made any other
+way are not comparable to the ones the plan was written against.
+
+**Stopping.** If you stop for any reason — a STOP condition, a failed
+gate you cannot fix, end of session — leave the tree clean on the last
+green per-packet commit, and state exactly which packet and which
+acceptance criterion you stopped at. Never leave a half-finished packet
+uncommitted and unmentioned.
