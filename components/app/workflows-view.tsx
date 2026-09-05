@@ -34,14 +34,14 @@ function Chain({ steps, running }: { steps: Step[]; running?: number }) {
               className={cn(
                 "inline-flex items-center gap-1.5 rounded-lg border px-2 py-1 text-[12px] transition-colors",
                 active
-                  ? "border-accent/40 bg-orange-50 text-accent"
-                  : "border-black/[0.08] bg-white text-neutral-600"
+                  ? "border-mint/40 bg-mint/[0.08] text-mint"
+                  : "border-white/[0.08] bg-white/[0.04] text-mist"
               )}
             >
-              <Icon size={12} className={active ? "text-accent" : "text-neutral-400"} />
+              <Icon size={12} className={active ? "text-mint" : "text-haze"} />
               {s.name}
             </span>
-            {i < steps.length - 1 && <span aria-hidden className="text-neutral-300">→</span>}
+            {i < steps.length - 1 && <span aria-hidden className="text-haze">→</span>}
           </span>
         );
       })}
@@ -79,7 +79,7 @@ function Facts({ w, lastResult }: { w: Workflow; lastResult?: RunResult }) {
 
   return (
     <>
-      <dl className="mt-4 flex flex-wrap gap-x-8 gap-y-2 border-t border-black/[0.06] pt-3 text-[12.5px]">
+      <dl className="mt-4 flex flex-wrap gap-x-8 gap-y-2 border-t border-white/[0.08] pt-3 text-[12.5px]">
         {[
           ["Trigger", w.trigger],
           ["Steps", String(w.steps.length)],
@@ -88,8 +88,8 @@ function Facts({ w, lastResult }: { w: Workflow; lastResult?: RunResult }) {
           ["Run from this browser", last ? `${runs.length}× · last ${ago(last.at)}` : "never"],
         ].map(([k, v]) => (
           <div key={k} className="flex items-baseline gap-1.5">
-            <dt className="text-neutral-400">{k}</dt>
-            <dd className="tnum text-neutral-700">{v}</dd>
+            <dt className="text-haze">{k}</dt>
+            <dd className="tnum text-frost">{v}</dd>
           </div>
         ))}
       </dl>
@@ -110,10 +110,10 @@ function Facts({ w, lastResult }: { w: Workflow; lastResult?: RunResult }) {
  */
 function RunReport({ result }: { result: RunResult }) {
   return (
-    <div className="mt-3 rounded-lg border border-black/[0.07] bg-neutral-50/70 p-3">
+    <div className="mt-3 rounded-lg border border-white/[0.08] bg-white/[0.04] p-3">
       <div className="flex items-baseline justify-between gap-3">
-        <span className="text-[12px] font-medium text-neutral-700">Last run</span>
-        <span className="tnum text-[11.5px] text-neutral-500">
+        <span className="text-[12px] font-medium text-frost">Last run</span>
+        <span className="tnum text-[11.5px] text-mist">
           {result.executed} executed · {usd(result.quotedUsdc, 3)} USDC quoted · {result.ms}ms
         </span>
       </div>
@@ -124,11 +124,11 @@ function RunReport({ result }: { result: RunResult }) {
               aria-hidden
               className={cn(
                 "mt-[5px] h-1.5 w-1.5 shrink-0 rounded-full",
-                !r.executed ? "bg-neutral-300" : r.ok ? "bg-emerald-500" : "bg-red-500"
+                !r.executed ? "bg-haze" : r.ok ? "bg-mint" : "bg-[#f28b82]"
               )}
             />
-            <span className="shrink-0 text-neutral-700">{r.name}</span>
-            <span className="min-w-0 flex-1 truncate text-neutral-500">
+            <span className="shrink-0 text-frost">{r.name}</span>
+            <span className="min-w-0 flex-1 truncate text-mist">
               {r.executed
                 ? `${r.status} · ${r.quotedUsdc != null ? `${usd(r.quotedUsdc, 3)} USDC quoted` : "no price named"} · ${r.ms}ms`
                 : r.detail}
@@ -136,7 +136,7 @@ function RunReport({ result }: { result: RunResult }) {
           </li>
         ))}
       </ul>
-      <p className="mt-2 text-[11.5px] leading-relaxed text-neutral-500">
+      <p className="mt-2 text-[11.5px] leading-relaxed text-mist">
         Prices here were decoded from the 402 each endpoint returned just now. No USDC moved — these calls
         carried no payment, which is why the answer was 402.
       </p>
@@ -273,11 +273,15 @@ export function WorkflowsView() {
       <PageHead
         title="Workflows"
         subtitle="A workflow chains triggers, paid calls and onchain actions. Press Run and every paid call in the chain is issued for real, against the deployed agent's published manifest — the price each step reports is decoded from the 402 that endpoint just returned, not from the template. Nothing is scheduled: there is no trigger service behind it yet, so no workflow fires on its own. And no USDC moves — the calls carry no payment, which is exactly why the answer is 402."
+        // "Start from a template" seeds the list from WORKFLOWS (lib/app-data.ts)
+        // alongside anything actually built — a generated row in the same list
+        // as a real one, per I-001. Simulated says so.
+        simulated
         actions={
           <button
             type="button"
             onClick={() => { setItems(WORKFLOWS); toast(`Loaded ${WORKFLOWS.length} starter templates — edit one in the builder`); }}
-            className="inline-flex items-center gap-1.5 rounded-lg bg-neutral-900 px-3 py-1.5 text-[13px] font-medium text-white transition-colors hover:bg-neutral-800"
+            className="inline-flex items-center gap-1.5 rounded-lg bg-frost px-3 py-1.5 text-[13px] font-medium text-ink transition-colors hover:bg-frost/90"
           >
             <Plus size={14} /> Start from a template
           </button>
@@ -290,7 +294,7 @@ export function WorkflowsView() {
       <div className="flex flex-wrap items-center gap-3 pb-4">
         <SearchInput value={q} onChange={setQ} placeholder="Search workflows…" className="w-full sm:w-[280px]" />
         {items.length > 0 && (
-          <span className="tnum ml-auto text-[12.5px] text-neutral-400">
+          <span className="tnum ml-auto text-[12.5px] text-haze">
             {rows.length} of {items.length}
           </span>
         )}
@@ -315,21 +319,21 @@ export function WorkflowsView() {
                   <div className="flex flex-wrap items-start justify-between gap-3">
                     <button type="button" onClick={() => setOpenId(w.id)} className="min-w-0 text-left">
                       <span className="flex items-center gap-2.5">
-                        <span className="text-[14.5px] font-semibold text-neutral-900">{w.name}</span>
+                        <span className="text-[14.5px] font-semibold text-frost">{w.name}</span>
                         {isRunning && (
-                          <span className="inline-flex items-center gap-1.5 text-[12.5px] font-medium text-accent">
-                            <span className="h-1.5 w-1.5 shrink-0 rounded-full bg-accent" />
+                          <span className="inline-flex items-center gap-1.5 text-[12.5px] font-medium text-mint">
+                            <span className="h-1.5 w-1.5 shrink-0 rounded-full bg-mint" />
                             Walking the chain
                           </span>
                         )}
                       </span>
-                      <span className="mt-1 block max-w-[70ch] text-[13px] leading-relaxed text-neutral-500">{w.summary}</span>
+                      <span className="mt-1 block max-w-[70ch] text-[13px] leading-relaxed text-mist">{w.summary}</span>
                     </button>
                     <div className="flex shrink-0 items-center gap-1.5">
                       <button
                         type="button"
                         onClick={() => setOpenId(w.id)}
-                        className="rounded-lg border border-black/10 px-2.5 py-1.5 text-[12.5px] font-medium text-neutral-700 transition-colors hover:border-black/20 hover:text-neutral-900"
+                        className="rounded-lg border border-white/[0.10] px-2.5 py-1.5 text-[12.5px] font-medium text-mist transition-colors hover:border-white/[0.16] hover:text-frost"
                       >
                         Open builder
                       </button>
@@ -338,8 +342,8 @@ export function WorkflowsView() {
                         onClick={() => run(w)}
                         disabled={!!running}
                         className={cn(
-                          "inline-flex items-center gap-1.5 rounded-lg border border-black/10 px-2.5 py-1.5 text-[12.5px] font-medium transition-colors",
-                          running ? "cursor-not-allowed text-neutral-300" : "text-neutral-700 hover:border-black/20 hover:text-neutral-900"
+                          "inline-flex items-center gap-1.5 rounded-lg border border-white/[0.10] px-2.5 py-1.5 text-[12.5px] font-medium transition-colors",
+                          running ? "cursor-not-allowed text-haze" : "text-mist hover:border-white/[0.16] hover:text-frost"
                         )}
                       >
                         <Play size={12} /> {isRunning ? "Running…" : "Run now"}
@@ -352,7 +356,7 @@ export function WorkflowsView() {
 
                   <div className="mt-4">
                     {w.steps.length === 0 ? (
-                      <p className="text-[12.5px] text-neutral-400">No steps yet — open the builder to draw the chain.</p>
+                      <p className="text-[12.5px] text-haze">No steps yet — open the builder to draw the chain.</p>
                     ) : (
                       <Chain steps={w.steps} running={isRunning ? running.step : undefined} />
                     )}
@@ -405,7 +409,7 @@ function Builder({
       <button
         type="button"
         onClick={onBack}
-        className="mb-4 inline-flex items-center gap-1.5 text-[12.5px] text-neutral-500 transition-colors hover:text-neutral-900"
+        className="mb-4 inline-flex items-center gap-1.5 text-[12.5px] text-mist transition-colors hover:text-frost"
       >
         <ArrowLeft size={13} /> All workflows
       </button>
@@ -420,10 +424,7 @@ function Builder({
             type="button"
             onClick={onRun}
             disabled={busy}
-            className={cn(
-              "inline-flex items-center gap-1.5 rounded-lg px-3 py-1.5 text-[13px] font-medium text-white transition-colors",
-              busy ? "cursor-not-allowed bg-neutral-300" : "bg-neutral-900 hover:bg-neutral-800"
-            )}
+            className="inline-flex items-center gap-1.5 rounded-lg bg-frost px-3 py-1.5 text-[13px] font-medium text-ink transition-colors hover:bg-frost/90 disabled:cursor-not-allowed disabled:opacity-40"
           >
             <Play size={14} /> {running != null ? "Running…" : "Run now"}
           </button>
@@ -438,8 +439,8 @@ function Builder({
           ["Cost / run", `${usd(costOfSteps(workflow.steps))} USDC`],
         ].map(([k, v]) => (
           <div key={k} className="flex items-baseline gap-1.5">
-            <span className="text-neutral-400">{k}</span>
-            <span className="tnum text-neutral-700">{v}</span>
+            <span className="text-haze">{k}</span>
+            <span className="tnum text-frost">{v}</span>
           </div>
         ))}
       </div>
@@ -460,7 +461,7 @@ function Builder({
         onDelete={onDelete}
       />
 
-      <p className="mt-3 max-w-[76ch] text-[12.5px] leading-relaxed text-neutral-500">
+      <p className="mt-3 max-w-[76ch] text-[12.5px] leading-relaxed text-mist">
         Cost per run is the sum of what this chain&apos;s paid steps quote. Run walks the chain here
         in the browser and records the walk on this device — it signs nothing, and the trigger above
         describes what would fire the chain once there is a service to fire it, not something running
