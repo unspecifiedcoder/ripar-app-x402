@@ -42,7 +42,7 @@ const PENDING_CALL: Record<IntentKind, string | null> = {
   quote: `POST ${process.env.NEXT_PUBLIC_AGENT_ENDPOINT ?? "api.ripar.io/api/summarize"}  — no payment attached`,
   jobs: "GET /api/registry/jobs  — jb_ and es_ boxes",
   agents: "GET /api/registry/agents  — ag_ boxes",
-  receipts: "indexer · settled USDC transfers",
+  receipts: "indexer, settled USDC transfers",
   help: null,
   unsupported: null,
 };
@@ -294,62 +294,60 @@ export function ChatView({
             )}
           </div>
 
-          <div className="border-t border-black/[0.07] p-3">
+          <div className="border-t border-white/[0.08] p-3">
             <div className="mx-auto max-w-[720px]">
               {busy && (
                 <div className="mb-2 flex justify-center">
                   <button
                     type="button"
                     onClick={stop}
-                    className="inline-flex items-center gap-1.5 rounded-full border border-black/10 bg-white px-3 py-1 text-[12px] font-medium text-neutral-600 transition-colors hover:border-black/20 hover:text-neutral-900"
+                    className="inline-flex items-center gap-1.5 rounded-full border border-white/[0.10] px-3 py-1 text-[12px] font-medium text-mist transition-colors hover:text-frost"
                   >
                     <Square size={9} className="fill-current" /> Stop generating
                   </button>
                 </div>
               )}
 
-              <div className="rounded-2xl border border-black/[0.09] bg-white p-2.5 transition-colors focus-within:border-neutral-400">
-                <textarea
-                  ref={input}
-                  autoFocus
-                  value={draft}
-                  onChange={(e) => setDraft(e.target.value)}
-                  onKeyDown={(e) => {
-                    if (e.key === "Enter" && !e.shiftKey) {
-                      e.preventDefault();
-                      send(draft);
-                    }
-                  }}
-                  rows={1}
-                  placeholder="Price my summariser at 0.01 USDC…"
-                  className="block w-full resize-none bg-transparent px-1.5 py-1 text-[13.5px] leading-relaxed outline-none placeholder:text-neutral-400"
-                />
-                <div className="mt-1.5 flex items-center gap-2 px-1">
-                  <span className="text-[11.5px] text-neutral-400">
-                    Enter to send · Shift+Enter for a new line
-                  </span>
-                  <button
-                    type="button"
-                    onClick={() => send(draft)}
-                    disabled={!draft.trim() || busy}
-                    aria-label="Send message"
-                    className={cn(
-                      "ml-auto flex h-7 w-7 items-center justify-center rounded-full transition-colors",
-                      draft.trim() && !busy
-                        ? "bg-neutral-900 text-white hover:bg-neutral-800"
-                        : "bg-neutral-200 text-neutral-400"
-                    )}
-                  >
-                    <CornerDownLeft size={13} />
-                  </button>
-                </div>
+              <textarea
+                ref={input}
+                autoFocus
+                value={draft}
+                onChange={(e) => setDraft(e.target.value)}
+                onKeyDown={(e) => {
+                  if (e.key === "Enter" && !e.shiftKey) {
+                    e.preventDefault();
+                    send(draft);
+                  }
+                }}
+                rows={1}
+                placeholder="Price my summariser at 0.01 USDC…"
+                className="block min-h-11 w-full resize-none rounded-[6px] border border-white/[0.08] bg-black/30 px-3 py-2.5 text-[13.5px] leading-relaxed text-frost outline-none transition-colors placeholder:text-haze focus:border-mint/50"
+              />
+              <div className="mt-1.5 flex items-center gap-2 px-1">
+                <span className="text-[11.5px] text-haze">
+                  Enter to send, Shift+Enter for a new line
+                </span>
+                <button
+                  type="button"
+                  onClick={() => send(draft)}
+                  disabled={!draft.trim() || busy}
+                  aria-label="Send message"
+                  className={cn(
+                    "ml-auto flex h-7 w-7 items-center justify-center rounded-[6px] transition-colors",
+                    draft.trim() && !busy
+                      ? "bg-white/[0.08] text-frost hover:bg-white/[0.12]"
+                      : "cursor-not-allowed bg-white/[0.08] text-frost opacity-40"
+                  )}
+                >
+                  <CornerDownLeft size={13} />
+                </button>
               </div>
             </div>
           </div>
         </div>
       </Sheet>
 
-      <p className="mt-2.5 text-[12px] text-neutral-400">
+      <p className="mt-2.5 text-[11.5px] text-mist">
         This is a router over four live sources, not a language model: pricing a paid call,
         the job board, the agent registry and settled transfers. Where a reply carries a
         request line, that is the call that actually went out and the figures under it are
@@ -364,10 +362,10 @@ function Opening({ onPick }: { onPick: (text: string) => void }) {
   return (
     <div className="mx-auto flex h-full max-w-[560px] flex-col items-center justify-center py-10 text-center">
       <Mark size={34} />
-      <h2 className="mt-4 text-[17px] font-semibold tracking-[-0.01em] text-neutral-900">
+      <h2 className="mt-4 text-[13.5px] font-medium text-frost">
         What should Ripar build?
       </h2>
-      <p className="mt-1.5 max-w-[46ch] text-[13.5px] leading-relaxed text-neutral-500">
+      <p className="mt-1.5 max-w-[46ch] text-[13px] leading-relaxed text-mist">
         Describe it the way you would to a colleague. Every answer names the call it would make
         before it makes it, so nothing is priced or posted behind your back.
       </p>
@@ -377,7 +375,7 @@ function Opening({ onPick }: { onPick: (text: string) => void }) {
             key={s}
             type="button"
             onClick={() => onPick(s)}
-            className="rounded-full border border-black/[0.08] bg-white px-2.5 py-1 text-[12px] text-neutral-600 transition-colors hover:border-black/20 hover:text-neutral-900"
+            className="h-8 rounded-[6px] border border-white/[0.10] px-3 text-[13px] text-mist transition-colors hover:text-frost"
           >
             {s}
           </button>
@@ -390,7 +388,7 @@ function Opening({ onPick }: { onPick: (text: string) => void }) {
 function Ask({ turn }: { turn: Turn }) {
   return (
     <div className="flex justify-end">
-      <p className="max-w-[80%] whitespace-pre-wrap rounded-2xl rounded-br-md bg-black/[0.045] px-3.5 py-2 text-[13.5px] leading-relaxed text-neutral-800">
+      <p className="max-w-[80%] whitespace-pre-wrap rounded-[10px] border border-white/[0.12] bg-white/[0.09] px-3.5 py-2 text-[13.5px] leading-relaxed text-frost">
         {turn.text}
       </p>
     </div>
@@ -403,33 +401,33 @@ function Reply({ turn }: { turn: Turn }) {
       <span className="mt-0.5 shrink-0">
         <Mark size={22} />
       </span>
-      <div className="min-w-0 flex-1">
+      <div className="min-w-0 max-w-[80%] flex-1 rounded-[10px] border border-white/[0.08] bg-white/[0.06] px-3.5 py-2.5">
         {turn.tool && <ToolChip tool={turn.tool} stopped={turn.stopped} />}
 
         {turn.text && (
-          <p className="mt-2.5 whitespace-pre-wrap text-[13.5px] leading-relaxed text-neutral-800">
+          <p className={cn("whitespace-pre-wrap text-[13.5px] leading-relaxed text-frost", turn.tool && "mt-2.5")}>
             {turn.text}
             {turn.streaming && (
               <span
                 aria-hidden
-                className="ml-0.5 inline-block h-[13px] w-[2px] translate-y-[2px] animate-pulse bg-accent"
+                className="ml-0.5 inline-block h-[13px] w-[2px] translate-y-[2px] animate-pulse bg-mint"
               />
             )}
           </p>
         )}
 
         {turn.facts && (
-          <dl className="mt-3 divide-y divide-black/[0.05] overflow-hidden rounded-xl border border-black/[0.08]">
+          <dl className="mt-3 divide-y divide-white/[0.06] overflow-hidden rounded-[8px] border border-white/[0.08]">
             {turn.facts.map((f) => (
               <div key={f.label} className="flex items-baseline justify-between gap-4 px-3 py-1.5">
-                <dt className="text-[12px] text-neutral-400">{f.label}</dt>
-                <dd className="tnum text-[12.5px] text-neutral-800">{f.value}</dd>
+                <dt className="font-plex text-[12px] text-mist">{f.label}</dt>
+                <dd className="font-plex tnum text-[12.5px] text-frost">{f.value}</dd>
               </div>
             ))}
           </dl>
         )}
 
-        {turn.stopped && <p className="mt-2 text-[12px] text-neutral-400">Stopped.</p>}
+        {turn.stopped && <p className="mt-2 font-plex text-[12px] text-mist">Stopped.</p>}
       </div>
     </div>
   );
@@ -439,20 +437,20 @@ function Reply({ turn }: { turn: Turn }) {
 function ToolChip({ tool, stopped }: { tool: NonNullable<Turn["tool"]>; stopped?: boolean }) {
   const state = tool.done ? "done" : stopped ? "stopped" : "running";
   const tone = {
-    running: { dot: "bg-amber-500 motion-safe:animate-pulse", label: "Running" },
-    done: { dot: "bg-emerald-500", label: "Ran" },
-    stopped: { dot: "bg-neutral-300", label: "Stopped" },
+    running: { dot: "bg-frost motion-safe:animate-pulse", label: "Running" },
+    done: { dot: "bg-mint", label: "Ran" },
+    stopped: { dot: "bg-haze", label: "Stopped" },
   }[state];
 
   return (
-    <div className="overflow-hidden rounded-xl border border-black/[0.08] bg-neutral-50">
+    <div className="overflow-hidden rounded-[8px] border border-white/[0.08] bg-black/30">
       <div className="flex items-center gap-2 px-2.5 py-1.5">
         <span className={cn("h-1.5 w-1.5 shrink-0 rounded-full", tone.dot)} />
-        <span className="shrink-0 text-[11.5px] font-medium text-neutral-500">{tone.label}</span>
-        <code className="min-w-0 flex-1 truncate font-mono text-[11.5px] text-neutral-700">{tool.call}</code>
+        <span className="shrink-0 font-plex text-[12px] font-medium text-mist">{tone.label}</span>
+        <code className="min-w-0 flex-1 truncate font-plex text-[12px] text-mist">{tool.call}</code>
       </div>
       {tool.done && (
-        <div className="border-t border-black/[0.05] px-2.5 py-1.5 font-mono text-[11.5px] text-emerald-700">
+        <div className="border-t border-white/[0.06] px-2.5 py-1.5 font-plex text-[12px] text-mist">
           → {tool.result}
         </div>
       )}

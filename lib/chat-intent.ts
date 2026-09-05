@@ -190,7 +190,7 @@ async function quote(text: string): Promise<IntentReply> {
   if (!data.ok || !data.paymentRequiredHeader) {
     return {
       call: `POST ${AGENT_ENDPOINT}  — no payment attached`,
-      result: `${data.status ?? res.status} · no challenge returned`,
+      result: `${data.status ?? res.status}, no challenge returned`,
       reply:
         data.error ??
         "The endpoint answered, but not with a payment challenge. Nothing was charged and nothing was signed.",
@@ -204,7 +204,7 @@ async function quote(text: string): Promise<IntentReply> {
 
   return {
     call: `POST ${AGENT_ENDPOINT}  — no payment attached`,
-    result: `${data.status} · ${data.elapsedMs ?? Date.now() - started}ms · ${data.paymentRequiredHeader.length}B header`,
+    result: `${data.status}, ${data.elapsedMs ?? Date.now() - started}ms, ${data.paymentRequiredHeader.length}B header`,
     reply:
       `That endpoint is x402-gated. It answered ${data.status} and stated its terms in a PAYMENT-REQUIRED ` +
       `header declaring x402 version ${q.x402Version ?? 2}. It wants ${price} USDC — ${units} base units over the ` +
@@ -234,7 +234,7 @@ async function jobs(): Promise<IntentReply> {
 
   return {
     call: `GET /api/registry/jobs  — jb_ and es_ boxes on app ${d.validationApp ?? "?"}`,
-    result: `${res.status} · ${list.length} jobs · round ${d.round ?? "?"}`,
+    result: `${res.status}, ${list.length} jobs, round ${d.round ?? "?"}`,
     reply:
       `The Validation Registry holds ${list.length} job${list.length === 1 ? "" : "s"} right now — ${spread}. ` +
       `Escrow actually held against them is ${usdc(escrowed)}, which is a different number from what the jobs ` +
@@ -257,7 +257,7 @@ async function agents(): Promise<IntentReply> {
 
   return {
     call: `GET /api/registry/agents  — ag_ boxes on app ${d.identityApp ?? "?"}`,
-    result: `${res.status} · ${list.length} agents · round ${d.round ?? "?"}`,
+    result: `${res.status}, ${list.length} agents, round ${d.round ?? "?"}`,
     reply:
       `The Identity Registry has ${list.length} registered agent${list.length === 1 ? "" : "s"}: ${names}. ` +
       `Registration is self-attested — it proves someone signed for that id and domain, not that anyone has ever ` +
@@ -303,8 +303,8 @@ async function receipts(get?: SettlementGetter): Promise<IntentReply> {
   const payers = new Set(runs.map((r) => r.from)).size;
 
   return {
-    call: "indexer · settled USDC transfers, as read by the workspace poller",
-    result: `${runs.length} settlements · round ${ctx.round ?? "?"}`,
+    call: "indexer, settled USDC transfers, as read by the workspace poller",
+    result: `${runs.length} settlements, round ${ctx.round ?? "?"}`,
     reply:
       `There ${runs.length === 1 ? "is" : "are"} ${runs.length} settled x402 ` +
       `transfer${runs.length === 1 ? "" : "s"} in view, totalling ${total.toFixed(3)} USDC across ${payers} ` +
@@ -316,7 +316,7 @@ async function receipts(get?: SettlementGetter): Promise<IntentReply> {
       { label: "Settlements in view", value: String(runs.length) },
       { label: "Total", value: `${total.toFixed(3)} USDC` },
       { label: "Distinct payers", value: String(payers) },
-      { label: "Paid to this address", value: `${ctx.mine.calls} · ${ctx.mine.earnedUsdc.toFixed(3)} USDC` },
+      { label: "Paid to this address", value: `${ctx.mine.calls} calls, ${ctx.mine.earnedUsdc.toFixed(3)} USDC` },
     ],
   };
 }
