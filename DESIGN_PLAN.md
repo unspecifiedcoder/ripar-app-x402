@@ -255,7 +255,7 @@ right), When (`mist` right), Proof. Rows keyed by `id`. Wrapped in
 `opacity 0→1, y 6→0` over 220ms with the gold bloom (an absolutely
 positioned radial `gold/[0.18]` → 0 over 1100ms behind the row). Reduced
 motion: no bloom, no y. Header row says "Live x402 settlements" `h2` with,
-on the right, `mono` `haze` "round 66,982,883 · 2.7s" (the chain status)
+on the right, `mono` `haze` "Round 66,982,883, 2.7s between blocks" (the chain status)
 and the "Open the explorer" ghost link (the chain status is a sentence, not a
 dot-joined string — §2.6a). Shows 20 rows; "Load more" as a
 ghost button reveals 20 more from `runs`.
