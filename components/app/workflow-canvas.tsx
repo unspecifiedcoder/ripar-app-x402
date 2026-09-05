@@ -253,7 +253,7 @@ function McpNode({ data, selected }: NodeProps<StepNode>) {
         data={data}
         selected={selected}
         icon={tool ? MCP_CATEGORY_ICON[tool.category] : STEP_KINDS.mcp.Icon}
-        sub={tool && category ? `MCP · ${tool.serverLabel ?? category.label}` : "MCP · tool not attached"}
+        sub={tool && category ? `MCP, ${tool.serverLabel ?? category.label}` : "MCP, tool not attached"}
       >
         <div className="mt-2 flex items-baseline justify-between gap-2 border-t border-white/[0.08] pt-2">
           <span className="min-w-0 truncate font-plex text-[10px] text-haze">{data.tool ?? "no tool"}</span>
@@ -825,7 +825,7 @@ function Canvas({
     const before = { nodes, edges };
     setNodes([]);
     setEdges([]);
-    log(`Cleared the canvas · ${before.nodes.length} ${before.nodes.length === 1 ? "step" : "steps"} removed`);
+    log(`Cleared the canvas, ${before.nodes.length} ${before.nodes.length === 1 ? "step" : "steps"} removed`);
     toast(`Cleared ${before.nodes.length} ${before.nodes.length === 1 ? "step" : "steps"}`, "default", {
       label: "Undo",
       onClick: () => {
@@ -1320,7 +1320,7 @@ function PropertiesPanel({
         <h3 className="text-[13px] font-semibold text-frost">Connection</h3>
         <p className="mt-2 text-[13px] leading-relaxed text-mist">
           {from?.data.name ?? "—"}
-          {edge.sourceHandle && <span className="text-haze"> · {edge.sourceHandle}</span>}
+          {edge.sourceHandle && <span className="text-haze">, {edge.sourceHandle}</span>}
           <span className="mx-1.5 text-haze">→</span>
           {to?.data.name ?? "—"}
         </p>
@@ -1519,7 +1519,7 @@ function PropertiesPanel({
               {!tool && <option value="">{step.data.tool ?? "No tool"} — not attached</option>}
               {[...catalogue.values()].map((t) => (
                 <option key={t.id} value={t.id}>
-                  {MCP_CATEGORIES[t.category].label} · {t.name}
+                  {MCP_CATEGORIES[t.category].label}, {t.name}
                 </option>
               ))}
             </select>
@@ -1536,7 +1536,7 @@ function PropertiesPanel({
                       <dt className="font-plex text-frost">{input.name}</dt>
                       <dd className="ml-auto text-haze">
                         {input.type}
-                        {input.required ? " · required" : ""}
+                        {input.required ? ", required" : ""}
                       </dd>
                     </div>
                   ))}

@@ -87,15 +87,15 @@ export function McpPalette({ onAdd }: { onAdd: (tool: McpTool) => void }) {
   const total = MCP_TOOLS.length + servers.reduce((sum, s) => sum + s.enabled.length, 0);
 
   return (
-    <aside className="flex min-h-0 flex-col border-b border-black/[0.07] bg-white md:w-[218px] md:shrink-0 md:border-b-0 md:border-r">
+    <aside className="flex min-h-0 flex-col border-b border-white/[0.08] bg-white md:w-[218px] md:shrink-0 md:border-b-0 md:border-r">
       <div className="flex items-center gap-2 px-3 pt-3">
-        <h3 className="text-[12.5px] font-semibold text-neutral-900">MCP tools</h3>
-        <span className="tnum text-[11.5px] text-neutral-400">{total}</span>
+        <h3 className="text-[12.5px] font-semibold text-frost">MCP tools</h3>
+        <span className="tnum text-[11.5px] text-haze">{total}</span>
         <button
           type="button"
           onClick={() => setConnect(true)}
           aria-label="Connect an MCP server"
-          className="ml-auto inline-flex items-center gap-1 rounded-md border border-black/10 px-1.5 py-1 text-[11.5px] font-medium text-neutral-600 transition-colors hover:border-black/20 hover:text-neutral-900"
+          className="ml-auto inline-flex items-center gap-1 rounded-md border border-white/[0.08] px-1.5 py-1 text-[11.5px] font-medium text-mist transition-colors hover:border-white/[0.08] hover:text-frost"
         >
           <Plug size={11} /> Connect
         </button>
@@ -103,7 +103,7 @@ export function McpPalette({ onAdd }: { onAdd: (tool: McpTool) => void }) {
 
       <div className="px-3 py-2">
         <div className="relative">
-          <Search size={13} className="pointer-events-none absolute left-2.5 top-1/2 -translate-y-1/2 text-neutral-400" />
+          <Search size={13} className="pointer-events-none absolute left-2.5 top-1/2 -translate-y-1/2 text-haze" />
           <input
             role="combobox"
             aria-expanded={flat.length > 0}
@@ -138,7 +138,7 @@ export function McpPalette({ onAdd }: { onAdd: (tool: McpTool) => void }) {
               }
             }}
             placeholder="Search tools…"
-            className="w-full rounded-lg border border-black/10 bg-white py-1.5 pl-7 pr-7 text-[12.5px] outline-none transition-colors placeholder:text-neutral-400 focus:border-neutral-400"
+            className="w-full rounded-lg border border-white/[0.08] bg-white py-1.5 pl-7 pr-7 text-[12.5px] outline-none transition-colors placeholder:text-haze focus:border-white/[0.08]"
           />
           {q && (
             <button
@@ -148,7 +148,7 @@ export function McpPalette({ onAdd }: { onAdd: (tool: McpTool) => void }) {
                 setSel(0);
               }}
               aria-label="Clear tool search"
-              className="absolute right-1.5 top-1/2 -translate-y-1/2 rounded p-0.5 text-neutral-400 transition-colors hover:text-neutral-900"
+              className="absolute right-1.5 top-1/2 -translate-y-1/2 rounded p-0.5 text-haze transition-colors hover:text-frost"
             >
               <X size={12} />
             </button>
@@ -165,8 +165,8 @@ export function McpPalette({ onAdd }: { onAdd: (tool: McpTool) => void }) {
       >
         {flat.length === 0 ? (
           <div className="px-2 py-8 text-center">
-            <p className="text-[12.5px] font-medium text-neutral-700">No tool matches</p>
-            <p className="mt-1 text-[12px] leading-relaxed text-neutral-500">
+            <p className="text-[12.5px] font-medium text-mist">No tool matches</p>
+            <p className="mt-1 text-[12px] leading-relaxed text-mist">
               Nothing in the library answers to &ldquo;{q}&rdquo;.
             </p>
             <button
@@ -175,7 +175,7 @@ export function McpPalette({ onAdd }: { onAdd: (tool: McpTool) => void }) {
                 setQ("");
                 setSel(0);
               }}
-              className="mt-3 rounded-lg border border-black/10 px-2.5 py-1 text-[12px] font-medium text-neutral-700 transition-colors hover:border-black/20"
+              className="mt-3 rounded-lg border border-white/[0.08] px-2.5 py-1 text-[12px] font-medium text-mist transition-colors hover:border-white/[0.08]"
             >
               Clear search
             </button>
@@ -184,11 +184,11 @@ export function McpPalette({ onAdd }: { onAdd: (tool: McpTool) => void }) {
           groups.map((g) => (
             <div key={g.key} role="group" aria-label={g.label} className="pt-1.5 first:pt-0.5">
               <div className="flex items-baseline gap-1.5 px-2 py-1" title={g.hint}>
-                <span className="text-[11px] font-semibold uppercase tracking-[0.04em] text-neutral-400">
+                <span className="text-[11px] font-semibold text-haze">
                   {g.label}
                 </span>
                 {g.attached && <span className="text-[10.5px] text-emerald-700">attached</span>}
-                <span className="tnum ml-auto text-[10.5px] text-neutral-300">{g.tools.length}</span>
+                <span className="tnum ml-auto text-[10.5px] text-haze">{g.tools.length}</span>
               </div>
               {g.tools.map((t) => {
                 const i = index.get(t.id) ?? -1;
@@ -211,15 +211,15 @@ export function McpPalette({ onAdd }: { onAdd: (tool: McpTool) => void }) {
                     onClick={() => onAdd(t)}
                     className={cn(
                       "flex cursor-grab items-center gap-1.5 rounded-lg px-2 py-[5px] transition-colors active:cursor-grabbing",
-                      on ? "bg-orange-50" : "hover:bg-black/[0.03]"
+                      on ? "bg-white/[0.06]" : "hover:bg-black/[0.03]"
                     )}
                   >
-                    <Icon size={12} className="shrink-0 text-neutral-400" />
-                    <span className="min-w-0 flex-1 truncate text-[12.5px] text-neutral-700">{t.name}</span>
+                    <Icon size={12} className="shrink-0 text-haze" />
+                    <span className="min-w-0 flex-1 truncate text-[12.5px] text-mist">{t.name}</span>
                     {t.price ? (
                       <span className="tnum shrink-0 text-[10.5px] text-accent">{usd(t.price, 3)}</span>
                     ) : (
-                      <span className="shrink-0 text-[10.5px] text-neutral-300">free</span>
+                      <span className="shrink-0 text-[10.5px] text-haze">free</span>
                     )}
                   </div>
                 );
@@ -229,7 +229,7 @@ export function McpPalette({ onAdd }: { onAdd: (tool: McpTool) => void }) {
         )}
       </div>
 
-      <p className="border-t border-black/[0.07] px-3 py-2 text-[11px] leading-relaxed text-neutral-400">
+      <p className="border-t border-white/[0.08] px-3 py-2 text-[11px] leading-relaxed text-haze">
         Drag a tool onto the canvas, or use ↑↓ and press Enter to drop it in the centre.
       </p>
 

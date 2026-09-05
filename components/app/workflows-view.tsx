@@ -74,8 +74,8 @@ function Facts({ w, lastResult }: { w: Workflow; lastResult?: RunResult }) {
   const quoted = last?.cost;
   const costRow: [string, string] =
     quoted != null
-      ? ["Cost / run · quoted", `${usd(quoted, 3)} USDC`]
-      : ["Cost / run · stated", `${usd(costOfSteps(w.steps), 3)} USDC`];
+      ? ["Cost per run, quoted", `${usd(quoted, 3)} USDC`]
+      : ["Cost per run, stated", `${usd(costOfSteps(w.steps), 3)} USDC`];
 
   return (
     <>
@@ -85,7 +85,7 @@ function Facts({ w, lastResult }: { w: Workflow; lastResult?: RunResult }) {
           ["Steps", String(w.steps.length)],
           ["Paid steps", String(paidSteps(w.steps))],
           costRow,
-          ["Run from this browser", last ? `${runs.length}× · last ${ago(last.at)}` : "never"],
+          ["Run from this browser", last ? `${runs.length}×, last ${ago(last.at)}` : "never"],
         ].map(([k, v]) => (
           <div key={k} className="flex items-baseline gap-1.5">
             <dt className="text-haze">{k}</dt>
@@ -114,7 +114,7 @@ function RunReport({ result }: { result: RunResult }) {
       <div className="flex items-baseline justify-between gap-3">
         <span className="text-[12px] font-medium text-frost">Last run</span>
         <span className="tnum text-[11.5px] text-mist">
-          {result.executed} executed · {usd(result.quotedUsdc, 3)} USDC quoted · {result.ms}ms
+          {result.executed} executed, {usd(result.quotedUsdc, 3)} USDC quoted, {result.ms}ms
         </span>
       </div>
       <ul className="mt-2 space-y-1">
@@ -130,7 +130,7 @@ function RunReport({ result }: { result: RunResult }) {
             <span className="shrink-0 text-frost">{r.name}</span>
             <span className="min-w-0 flex-1 truncate text-mist">
               {r.executed
-                ? `${r.status} · ${r.quotedUsdc != null ? `${usd(r.quotedUsdc, 3)} USDC quoted` : "no price named"} · ${r.ms}ms`
+                ? `${r.status}, ${r.quotedUsdc != null ? `${usd(r.quotedUsdc, 3)} USDC quoted` : "no price named"}, ${r.ms}ms`
                 : r.detail}
             </span>
           </li>
@@ -214,10 +214,10 @@ export function WorkflowsView() {
     });
 
     const skipped = w.steps.length - result.executed;
-    const tail = skipped > 0 ? ` · ${skipped} step${skipped === 1 ? "" : "s"} had nothing to call` : "";
+    const tail = skipped > 0 ? `, ${skipped} step${skipped === 1 ? "" : "s"} had nothing to call` : "";
     if (result.ok) {
       toast(
-        `${w.name} ran · ${result.executed} paid call${result.executed === 1 ? "" : "s"} quoted ` +
+        `${w.name} ran, ${result.executed} paid call${result.executed === 1 ? "" : "s"} quoted ` +
           `${usd(result.quotedUsdc, 3)} USDC in ${result.ms}ms${tail}`,
         "success",
       );

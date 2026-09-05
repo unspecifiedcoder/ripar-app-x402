@@ -69,7 +69,7 @@ export function RunsPanel({ runs }: { runs: WorkflowRun[] }) {
           {rows.map((r) => (
             <tr
               key={r.id}
-              title={`${fullStamp(r.at)} · ${r.steps} ${r.steps === 1 ? "step" : "steps"} · ${secs(r.ms)}`}
+              title={`${fullStamp(r.at)}, ${r.steps} ${r.steps === 1 ? "step" : "steps"}, ${secs(r.ms)}`}
               className="border-t border-white/[0.06]"
             >
               <td className={cn(TD, "tnum text-mist")}>{when(r.at)}</td>
