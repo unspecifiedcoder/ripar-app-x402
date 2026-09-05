@@ -54,7 +54,7 @@ export function Menu({
         <div
           role="menu"
           className={cn(
-            "absolute z-50 min-w-[220px] rounded-xl border border-black/[0.08] bg-white p-1 shadow-[0_16px_44px_-12px_rgba(0,0,0,0.28)]",
+            "absolute z-50 min-w-[220px] rounded-[6px] border border-white/[0.12] bg-white/[0.09] p-1 shadow-[0_24px_64px_-24px_rgba(0,0,0,0.8)] backdrop-blur-md",
             side === "bottom" ? "top-full mt-2" : "bottom-full mb-2",
             align === "end" ? "right-0" : "left-0",
             "origin-top motion-safe:animate-[menuIn_120ms_ease-out]",
@@ -94,23 +94,23 @@ export function MenuItem({
         onClick?.();
       }}
       className={cn(
-        "flex w-full items-center gap-2.5 rounded-lg px-2.5 py-2 text-left text-sm transition-colors",
+        "flex w-full items-center gap-2.5 rounded-[6px] px-2.5 py-2 text-left text-[13px] transition-colors",
         danger
-          ? "text-rose-600 hover:bg-rose-50"
-          : "text-neutral-700 hover:bg-neutral-100"
+          ? "text-[#f28b82] hover:bg-[#f28b82]/[0.12]"
+          : "text-mist hover:bg-white/[0.06] hover:text-frost"
       )}
     >
-      {icon && <span className={cn("shrink-0", danger ? "text-rose-500" : "text-neutral-400")}>{icon}</span>}
+      {icon && <span className={cn("shrink-0", danger ? "text-[#f28b82]" : "text-haze")}>{icon}</span>}
       <span className="flex-1 truncate">{children}</span>
-      {shortcut && <span className="text-[11px] text-neutral-400">{shortcut}</span>}
+      {shortcut && <span className="text-[11px] text-haze">{shortcut}</span>}
     </button>
   );
 }
 
 export function MenuLabel({ children }: { children: ReactNode }) {
-  return <div className="px-2.5 py-1.5 text-[11px] font-medium uppercase tracking-wide text-neutral-400">{children}</div>;
+  return <div className="px-2.5 py-1.5 text-[11px] text-haze">{children}</div>;
 }
 
 export function MenuSeparator() {
-  return <div className="my-1 h-px bg-black/[0.06]" />;
+  return <div className="my-1 h-px bg-white/[0.08]" />;
 }

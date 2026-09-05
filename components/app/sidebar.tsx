@@ -3,10 +3,10 @@
 import { Activity, BadgePlus, Bot, BookUser, ClipboardList, Keyboard, LayoutGrid, MessageSquare, Plug, Receipt, Search, Settings, Wallet } from "lucide-react";
 import { Mark } from "@/components/ui/mark";
 import { Menu, MenuItem } from "@/components/ui/menu";
+import { Testnet } from "./bits";
 import { cn } from "@/lib/utils";
 import { usd } from "@/lib/format";
 import { useWorkspace } from "@/lib/real-data";
-import { networkLabel } from "@/lib/explorer";
 import { shortAddress } from "@/lib/algorand-address";
 import { useSettings } from "@/lib/settings";
 
@@ -39,6 +39,7 @@ export function Sidebar({
   onWithdraw,
   onSettings,
   onShortcuts,
+  itemHeight,
 }: {
   view: View;
   onSelect: (v: View) => void;
@@ -46,13 +47,15 @@ export function Sidebar({
   onWithdraw: () => void;
   onSettings: () => void;
   onShortcuts: () => void;
+  /** 44px in the mobile drawer so every item clears the touch target floor;
+   *  36px on the desktop rail (§2.4). */
+  itemHeight?: "desktop" | "touch";
 }) {
   const { name, payout } = useSettings();
   // Real earnings, from settlements to the deployed agent's payout address.
   // It reads 0.00 until somebody actually pays, and that is the honest number.
-  const { data: ws } = useWorkspace();
-  // Whichever chain the data layer is really reading, not a fixed label.
-  const chainName = networkLabel(ws?.chain.network ?? "testnet");
+  const { data: ws, status } = useWorkspace();
+  const network = ws?.chain.network;
   const earned = ws?.mine.earnedUsdc ?? 0;
   const calls = ws?.mine.calls ?? 0;
   // Signed out is a real state here, not a placeholder to paper over: the auth
@@ -63,30 +66,47 @@ export function Sidebar({
   const initials = signedIn
     ? name.trim().split(/\s+/).slice(0, 2).map((w) => w[0]?.toUpperCase() ?? "").join("")
     : "—";
+  const touch = itemHeight === "touch";
 
   return (
     <div className="flex h-full w-full flex-col">
       <div className="flex items-center gap-2.5 px-3 py-3.5">
         <Mark size={26} />
         <span className="min-w-0 leading-tight">
-          <span className="block truncate text-[13.5px] font-semibold text-neutral-900">Ripar</span>
-          <span className="block text-[11px] text-neutral-400">Algorand {chainName}</span>
+          <span className="block truncate text-[13.5px] font-semibold text-frost">Ripar</span>
+          <span className="flex items-center gap-1.5 font-plex text-[11px] text-haze">
+            {status === "loading" ? (
+              "Algorand"
+            ) : network === "testnet" ? (
+              <>
+                Algorand <Testnet />
+              </>
+            ) : (
+              "Algorand MainNet"
+            )}
+          </span>
         </span>
       </div>
 
       <button
         type="button"
         onClick={onSearch}
-        className="mx-2.5 flex items-center gap-2 rounded-lg border border-black/[0.08] bg-white px-2.5 py-1.5 text-[12.5px] text-neutral-400 transition-colors hover:border-black/15"
+        className={cn(
+          "mx-2.5 flex items-center gap-2 rounded-[6px] border border-white/[0.08] bg-black/30 px-2.5 text-[12.5px] text-mist transition-colors hover:border-white/[0.14]",
+          touch ? "min-h-11" : "h-9"
+        )}
       >
         <Search size={13} />
         Search
-        <kbd className="ml-auto rounded border border-black/10 bg-neutral-50 px-1.5 text-[10px] font-medium">
+        <kbd className="ml-auto rounded border border-white/[0.10] px-1 font-plex text-[10.5px] text-haze">
           ⌘K
         </kbd>
       </button>
 
-      <nav className="mt-3 space-y-0.5 px-2">
+      {/* Not a <nav> here — the sidebar's own landmark is the wrapper this
+          component is mounted into (shell.tsx). A nested nav would be a
+          second, redundant landmark. */}
+      <div className="mt-3 space-y-0.5 px-2">
         {NAV.map(({ id, label, Icon }) => {
           const active = view === id;
           return (
@@ -96,32 +116,43 @@ export function Sidebar({
               onClick={() => onSelect(id)}
               aria-current={active ? "page" : undefined}
               className={cn(
-                "relative flex w-full items-center gap-2.5 rounded-lg px-2.5 py-[7px] text-[13.5px] font-medium transition-colors",
-                active ? "bg-black/[0.055] text-neutral-900" : "text-neutral-500 hover:bg-black/[0.03] hover:text-neutral-900"
+                "relative flex w-full items-center gap-2.5 rounded-[6px] px-2.5 text-[13.5px] font-medium transition-colors",
+                touch ? "min-h-11" : "h-9",
+                active ? "bg-white/[0.06] text-frost" : "text-mist hover:bg-white/[0.04] hover:text-frost"
               )}
             >
-              {active && <span className="absolute inset-y-1.5 left-0 w-[2.5px] rounded-full bg-accent" />}
-              <Icon size={15} className={active ? "text-accent" : "text-neutral-400"} />
+              {active && <span className="absolute inset-y-1.5 left-0 w-[2px] rounded-full bg-frost" />}
+              <Icon size={16} className="shrink-0" />
               {label}
             </button>
           );
         })}
-      </nav>
+      </div>
 
       <div className="mt-auto space-y-2 p-2.5">
-        <div className="rounded-xl border border-black/[0.08] bg-white p-3">
-          <div className="text-[11.5px] text-neutral-500">Settled to your address</div>
-          <div className="tnum mt-0.5 text-[17px] font-semibold tracking-tight text-neutral-900">
-            {usd(earned)}{" "}
-            <span className="text-[11px] font-medium text-neutral-400">USDC</span>
+        <div className="rounded-[10px] border border-white/[0.08] bg-white/[0.06] p-3">
+          <div className="text-[11px] font-medium leading-[14px] text-haze">Settled to your address</div>
+          <div className="mt-1 flex items-baseline gap-1">
+            <span
+              className={cn(
+                "font-plex tnum text-[22px] leading-[26px] tracking-[-0.01em]",
+                status === "loading" ? "text-mist" : earned > 0 ? "text-gold" : "text-frost"
+              )}
+            >
+              {status === "loading" ? "—" : usd(earned)}
+            </span>
+            <span className="text-[12.5px] text-mist">USDC</span>
           </div>
-          <div className="mt-1 text-[11px] text-neutral-400">
+          <div className="mt-0.5 text-[11.5px] leading-4 text-mist">
             {calls === 0 ? "no paid calls yet" : `${calls} paid ${calls === 1 ? "call" : "calls"}`}
           </div>
           <button
             type="button"
             onClick={onWithdraw}
-            className="mt-2.5 w-full rounded-lg bg-neutral-900 py-1.5 text-[12px] font-medium text-white transition-colors hover:bg-neutral-800"
+            className={cn(
+              "mt-2.5 w-full rounded-[6px] bg-white/[0.08] text-[13px] font-medium text-frost transition-colors hover:bg-white/[0.14]",
+              touch ? "min-h-11" : "h-8"
+            )}
           >
             Withdraw to wallet
           </button>
@@ -133,18 +164,17 @@ export function Sidebar({
             <button
               type="button"
               onClick={toggle}
-              className="flex w-full items-center gap-2 rounded-lg px-1.5 py-1.5 text-left transition-colors hover:bg-black/[0.03]"
+              className={cn(
+                "flex w-full items-center gap-2 rounded-[6px] px-1.5 text-left transition-colors hover:bg-white/[0.04]",
+                touch ? "min-h-11" : "py-1.5"
+              )}
             >
-              <span className={
-                  signedIn
-                    ? "flex h-6 w-6 shrink-0 items-center justify-center rounded-full bg-gradient-to-br from-orange-400 to-red-500 text-[9px] font-bold text-white"
-                    : "flex h-6 w-6 shrink-0 items-center justify-center rounded-full bg-neutral-200 text-[9px] font-bold text-neutral-500"
-                }>
+              <span className="flex h-6 w-6 shrink-0 items-center justify-center rounded-full bg-white/[0.08] text-[9px] font-bold text-mist">
                 {initials}
               </span>
               <span className="min-w-0 leading-tight">
-                <span className="block truncate text-[12.5px] font-medium text-neutral-800">{signedIn ? name : "Not signed in"}</span>
-                <span className="block truncate font-mono text-[10.5px] text-neutral-400">{payout ? shortAddress(payout) : "browsing read-only"}</span>
+                <span className="block truncate text-[13px] text-frost">{signedIn ? name : "Not signed in"}</span>
+                <span className="block truncate font-plex text-[11px] text-haze">{payout ? shortAddress(payout) : "browsing read-only"}</span>
               </span>
             </button>
           )}
