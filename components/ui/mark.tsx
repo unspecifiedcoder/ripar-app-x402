@@ -1,3 +1,5 @@
+import { useId } from "react";
+
 // The Ripar mark — a fan of four blades opening from a single pivot.
 // Single source for the navbar, the footer and app/icon.svg.
 //
@@ -15,7 +17,8 @@ const STOPS: [string, string, string][] = [
   ["hi", "#ffd9a3", "#ff8f42"],
   ["lt", "#ff9d4f", "#ff6620"],
   ["md", "#f4541b", "#c93400"],
-  ["dk", "#b62c00", "#8a2000"],
+  // D-016: lifted from #b62c00 / #8a2000 so the fan stays legible on ink.
+  ["dk", "#d84a1a", "#b8380f"],
 ];
 
 /** Blade triangles, then fitted into the 48 box so the fan sits centred and
@@ -45,7 +48,12 @@ const BLADES = (() => {
 })();
 
 export function Mark({ size = 26, className }: { size?: number; className?: string }) {
-  const p = "ripar-fan";
+  // Unique per instance: the sidebar is mounted twice at once (the hidden
+  // desktop rail plus the mobile drawer), and two <linearGradient>s sharing
+  // the same id resolve `url(#id)` to whichever came first in the document —
+  // which silently painted the mark blank when that first instance sat
+  // inside a `display:none` subtree.
+  const p = `ripar-fan-${useId()}`;
   return (
     <svg width={size} height={size} viewBox="0 0 48 48" className={className} aria-hidden>
       <defs>

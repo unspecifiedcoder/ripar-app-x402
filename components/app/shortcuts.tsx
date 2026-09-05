@@ -21,7 +21,7 @@ export const GO_KEYS: Record<string, View> = {
   n: "register",
 };
 
-const VIEW_LABEL: Record<View, string> = {
+export const VIEW_LABEL: Record<View, string> = {
   overview: "Overview",
   chat: "Chat",
   endpoints: "Endpoints",
@@ -115,16 +115,16 @@ export function useShortcuts({
 export function ChordHint({ show }: { show: boolean }) {
   if (!show) return null;
   return (
-    <div className="pointer-events-none fixed bottom-5 left-5 z-[90] flex items-center gap-2 rounded-lg bg-neutral-900 px-2.5 py-1.5 text-[12px] font-medium text-white shadow-lg">
+    <div className="pointer-events-none fixed bottom-5 left-5 z-[90] flex items-center gap-2 rounded-[10px] border border-white/[0.12] bg-white/[0.09] px-2.5 py-1.5 text-[12.5px] font-medium text-frost shadow-[0_24px_64px_-24px_rgba(0,0,0,0.8)] backdrop-blur-md">
       <Key>g</Key>
-      <span className="text-neutral-400">then o · c · e · w · a · r · s · d · j · n</span>
+      <span className="text-mist">then o · c · e · w · a · r · s · d · j · n</span>
     </div>
   );
 }
 
 function Key({ children }: { children: ReactNode }) {
   return (
-    <kbd className="inline-flex min-w-[20px] items-center justify-center rounded border border-white/20 bg-white/10 px-1.5 py-0.5 font-sans text-[11px] font-semibold">
+    <kbd className="inline-flex min-w-[20px] items-center justify-center rounded border border-white/[0.10] px-1.5 py-0.5 font-plex text-[11px] font-semibold text-haze">
       {children}
     </kbd>
   );
@@ -132,7 +132,7 @@ function Key({ children }: { children: ReactNode }) {
 
 function RowKey({ children }: { children: ReactNode }) {
   return (
-    <kbd className="inline-flex min-w-[22px] items-center justify-center rounded border border-black/10 bg-neutral-50 px-1.5 py-0.5 font-sans text-[11.5px] font-semibold text-neutral-700">
+    <kbd className="inline-flex min-w-[22px] items-center justify-center rounded border border-white/[0.10] px-1.5 py-0.5 font-plex text-[11.5px] font-semibold text-haze">
       {children}
     </kbd>
   );
@@ -151,7 +151,6 @@ export function ShortcutsOverlay({ open, onClose }: { open: boolean; onClose: ()
       onClose={onClose}
       title="Keyboard shortcuts"
       description="Press g, then the letter of where you want to be."
-      className="max-w-lg"
     >
       <div className="grid gap-6 sm:grid-cols-2">
         <Group title="Go to">
@@ -172,7 +171,7 @@ export function ShortcutsOverlay({ open, onClose }: { open: boolean; onClose: ()
           ))}
         </Group>
       </div>
-      <p className="mt-5 text-[12px] leading-relaxed text-neutral-400">
+      <p className="mt-5 text-[12px] leading-relaxed text-mist">
         Shortcuts stay out of the way while you are typing in a field or a dialog is open.
       </p>
     </Modal>
@@ -182,7 +181,7 @@ export function ShortcutsOverlay({ open, onClose }: { open: boolean; onClose: ()
 function Group({ title, children }: { title: string; children: ReactNode }) {
   return (
     <div>
-      <h3 className="text-[11px] font-semibold uppercase tracking-wide text-neutral-400">{title}</h3>
+      <h3 className="text-[11px] text-haze">{title}</h3>
       <ul className="mt-2 space-y-1">{children}</ul>
     </div>
   );
@@ -190,7 +189,7 @@ function Group({ title, children }: { title: string; children: ReactNode }) {
 
 function Row({ label, children }: { label: string; children: ReactNode }) {
   return (
-    <li className={cn("flex items-center gap-2 py-[3px] text-[13px] text-neutral-700")}>
+    <li className={cn("flex items-center gap-2 py-[3px] text-[13px] text-frost")}>
       <span className="flex-1 truncate">{label}</span>
       <span className="flex shrink-0 items-center gap-1">{children}</span>
     </li>
