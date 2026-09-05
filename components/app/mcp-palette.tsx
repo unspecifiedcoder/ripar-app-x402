@@ -87,7 +87,7 @@ export function McpPalette({ onAdd }: { onAdd: (tool: McpTool) => void }) {
   const total = MCP_TOOLS.length + servers.reduce((sum, s) => sum + s.enabled.length, 0);
 
   return (
-    <aside className="flex min-h-0 flex-col border-b border-white/[0.08] bg-white md:w-[218px] md:shrink-0 md:border-b-0 md:border-r">
+    <aside className="flex min-h-0 flex-col border-b border-white/[0.08] bg-transparent md:w-[218px] md:shrink-0 md:border-b-0 md:border-r">
       <div className="flex items-center gap-2 px-3 pt-3">
         <h3 className="text-[12.5px] font-semibold text-frost">MCP tools</h3>
         <span className="tnum text-[11.5px] text-haze">{total}</span>
@@ -138,7 +138,7 @@ export function McpPalette({ onAdd }: { onAdd: (tool: McpTool) => void }) {
               }
             }}
             placeholder="Search tools…"
-            className="w-full rounded-lg border border-white/[0.08] bg-white py-1.5 pl-7 pr-7 text-[12.5px] outline-none transition-colors placeholder:text-haze focus:border-white/[0.08]"
+            className="w-full rounded-lg border border-white/[0.08] bg-transparent py-1.5 pl-7 pr-7 text-[12.5px] outline-none transition-colors placeholder:text-haze focus:border-white/[0.08]"
           />
           {q && (
             <button
@@ -211,7 +211,7 @@ export function McpPalette({ onAdd }: { onAdd: (tool: McpTool) => void }) {
                     onClick={() => onAdd(t)}
                     className={cn(
                       "flex cursor-grab items-center gap-1.5 rounded-lg px-2 py-[5px] transition-colors active:cursor-grabbing",
-                      on ? "bg-white/[0.06]" : "hover:bg-black/[0.03]"
+                      on ? "bg-white/[0.06]" : "hover:bg-white/[0.04]"
                     )}
                   >
                     <Icon size={12} className="shrink-0 text-haze" />
